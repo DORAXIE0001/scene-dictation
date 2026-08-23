@@ -8,6 +8,7 @@
   const KEY_PROGRESS = 'sd-progress-v1';
   const KEY_LOCAL_FILE_NAME = 'sd-local-file-name';
   const KEY_SRT_PREFIX = 'sd-srt-'; // 每课一份导入的字幕，存本机浏览器
+  const KEY_SUB_MASK = 'sd-sub-mask'; // 遮挡视频内嵌硬字幕的黑条开关
   const STATS_KEEP_DAYS = 90;
   // 有效学习时长口径：页面可见 + 最近 90 秒内有操作时，每 15 秒累计一次
   const ACTIVE_WINDOW_MS = 90 * 1000;
@@ -27,6 +28,7 @@
     video: $('sceneVideo'), image: $('sceneImage'),
     localOverlay: $('localOverlay'), localOverlayDesc: $('localOverlayDesc'), localFileInput: $('localFileInput'),
     mediaBar: $('mediaBar'), mediaBarStatus: $('mediaBarStatus'), srtFileInput: $('srtFileInput'),
+    subMask: $('subMask'), maskToggle: $('maskToggle'),
     lineSpeaker: $('lineSpeaker'), lineProgress: $('lineProgress'), lineZh: $('lineZh'),
     letterTrack: $('letterTrack'), answerInput: $('answerInput'), feedback: $('feedback'),
     answerReveal: $('answerReveal'), answerText: $('answerText'),
@@ -439,6 +441,20 @@
       ? '已导入「' + imp.name + '」（' + imp.lines.length + ' 句，刷新后仍保留）'
       : '选本集的 .srt 字幕文件，自动生成全部听写句（双语字幕可带出中文意思）';
   }
+
+  // 遮字幕开关：很多下载视频把双语字幕烧进了画面，英文答案会直接暴露，用黑条盖住底部
+  let subMaskOn = localStorage.getItem(KEY_SUB_MASK) === '1';
+  function renderSubMask() {
+    el.subMask.hidden = !subMaskOn;
+    el.maskToggle.textContent = subMaskOn ? '遮字幕：开' : '遮字幕：关';
+    el.maskToggle.setAttribute('aria-pressed', String(subMaskOn));
+  }
+  el.maskToggle.addEventListener('click', () => {
+    subMaskOn = !subMaskOn;
+    localStorage.setItem(KEY_SUB_MASK, subMaskOn ? '1' : '0');
+    renderSubMask();
+  });
+  renderSubMask();
 
   el.srtFileInput.addEventListener('change', () => {
     const file = el.srtFileInput.files && el.srtFileInput.files[0];

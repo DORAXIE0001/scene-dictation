@@ -131,12 +131,25 @@ body {
 
 /* ---------- 画面区 ---------- */
 
+/* 右列内容统一限宽：宽屏上视频不再铺满，且按视口高度收缩，保证画面+听写区同屏可见 */
+.media-frame, .media-bar, .dictation {
+  max-width: min(880px, calc((100vh - 320px) * 1.7778));
+}
+
 .media-frame {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #0d0d0f;
   border: 1px solid var(--line-strong);
+}
+
+/* 遮挡视频内嵌硬字幕的黑条（防止答案直接印在画面上） */
+.sub-mask {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 17%;
+  background: #0d0d0f;
+  pointer-events: none; /* 不挡播放器控制条的点击 */
 }
 
 .media-el { width: 100%; height: 100%; object-fit: contain; display: block; }

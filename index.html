@@ -70,6 +70,7 @@
             <input id="localFileInput" type="file" accept="video/*,audio/*" hidden>
           </label>
         </div>
+        <div id="subMask" class="sub-mask" hidden></div>
       </div>
 
       <!-- 本地课程的素材工具条：导入字幕自动生成听写句 -->
@@ -78,6 +79,7 @@
           导入字幕（.srt）
           <input id="srtFileInput" type="file" accept=".srt" hidden>
         </label>
+        <button id="maskToggle" class="btn" type="button" aria-pressed="false">遮字幕：关</button>
         <span id="mediaBarStatus" class="media-bar-status"></span>
       </div>
 
