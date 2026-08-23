@@ -46,6 +46,21 @@ python3 -m http.server 8788 -d .
 - 字幕文件与视频一样只在本地使用，`.gitignore` 已封死 `*.srt` 等后缀，不会进入仓库。
 - 句子超过 20 句时，底部导航自动从圆点切换为「已完成 n / N + 跳转框」。
 
+## 没有字幕文件？本地 AI 转写
+
+视频没有配套 `.srt` 时，可以用 Whisper 在本机离线生成（英文字幕，不上传任何内容）：
+
+```bash
+# 一次性准备：安装工具 + 下载模型（约 466MB，放 models/ 目录）
+brew install ffmpeg whisper-cpp
+curl -L -o models/ggml-small.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin
+
+# 每集一条命令，输出与视频同名的 .srt
+tools/transcribe.sh 1/S01E01.mp4
+```
+
+实测 Apple 芯片上约 1 分钟处理 5 分钟音频；`models/`、`*.srt` 均已被 `.gitignore` 拦截，不会入库。
+
 ## 已知边界
 
 - **刷新后需要重新选择本地视频文件。** 这是浏览器安全机制（页面无法记住并自动重新读取本地文件），不是 bug；页面会提示上次选择的文件名帮你找回。
