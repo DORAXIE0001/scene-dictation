@@ -34,6 +34,7 @@
     answerReveal: $('answerReveal'), answerText: $('answerText'),
     checkBtn: $('checkBtn'), hintBtn: $('hintBtn'), playBtn: $('playBtn'), recordBtn: $('recordBtn'),
     hintText: $('hintText'), recordArea: $('recordArea'), recordPlayback: $('recordPlayback'),
+    listenBtn: $('listenBtn'),
     prevBtn: $('prevBtn'), nextBtn: $('nextBtn'), lineDots: $('lineDots'),
   };
 
@@ -417,7 +418,8 @@
     const lines = cues.map((c, i) => ({
       id: lesson.id + '-srt-' + i,
       speaker: '',
-      zh: c.zh || '（这一句没有中文字幕，先播放片段听一遍再输入）',
+      zh: c.zh || '', // 空中文由渲染层显示弱提示
+
       en: c.en,
       hint: '共 ' + c.en.split(/\s+/).filter(Boolean).length + ' 个单词',
       // 前后各留 0.3 秒，播放片段听起来不掐头去尾
@@ -507,7 +509,13 @@
 
     el.lineSpeaker.textContent = line.speaker || '';
     el.lineProgress.textContent = '第 ' + (lineIndex + 1) + ' / ' + lines.length + ' 句';
-    el.lineZh.textContent = line.zh;
+    // 纯英文字幕没有中文题面：降级为弱提示（兼容旧版导入数据里的长占位文案）
+    const zhMissing = !line.zh || line.zh.startsWith('（这一句没有中文字幕');
+    el.lineZh.textContent = zhMissing ? '这句没有中文提示——听本句片段，把听到的英文打出来' : line.zh;
+    el.lineZh.className = 'line-zh' + (zhMissing ? ' placeholder' : '');
+    // 听本句：本地课程且该句带时间点时显示，不要求先答对（听写本来就要先听）
+    const canListen = currentLesson().mediaMode === 'local' && line.startTime != null;
+    el.listenBtn.hidden = !canListen;
     el.hintText.hidden = true;
     el.hintText.textContent = line.hint || '暂无提示。';
     el.hintBtn.textContent = '显示提示';
@@ -617,6 +625,29 @@
     prevWrongCount = res.wrongCount;
     prevCompleted = res.completed;
     prevInputLen = val.length;
+  });
+
+  el.listenBtn.addEventListener('click', () => {
+    if (!localFileUrl) {
+      setFeedback('先在上方选择本集的视频文件，才能播放片段。', 'err');
+      return;
+    }
+    playSegment(currentLine());
+  });
+
+  // 键盘闭环：回车检查，答对后回车去下一句；Shift+回车重听本句
+  el.answerInput.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (e.shiftKey) {
+      if (!el.listenBtn.hidden) el.listenBtn.click();
+      return;
+    }
+    if (lineDone(currentLine())) {
+      if (!el.nextBtn.disabled) { el.nextBtn.click(); el.answerInput.focus(); }
+    } else {
+      el.checkBtn.click();
+    }
   });
 
   el.checkBtn.addEventListener('click', () => {

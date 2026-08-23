@@ -54,6 +54,13 @@ body {
   display: grid;
   grid-template-columns: 360px 1fr;
   min-height: calc(100vh - 53px);
+  /* 超宽屏上整版居中收拢，避免右侧大片空白 */
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1481px) {
+  .layout { border-left: 1px solid var(--line-strong); border-right: 1px solid var(--line-strong); }
 }
 
 .col-left {
@@ -183,6 +190,10 @@ body {
 
 .btn-ghost { border-color: var(--line); }
 
+/* 听本句：黑实底，视觉上是练习的起点动作 */
+.btn-dark { background: var(--ink); border-color: var(--ink); color: #fff; }
+.btn-dark:hover:not(:disabled) { background: #333; border-color: #333; color: #fff; }
+
 .file-btn { display: inline-flex; align-items: center; }
 
 /* ---------- 素材工具条 ---------- */
@@ -209,6 +220,9 @@ body {
 .line-progress { font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 
 .line-zh { font-size: 20px; font-weight: 700; margin-top: 6px; }
+
+/* 字幕没有中文时的题面：降级为弱提示，不再用大标题喊话 */
+.line-zh.placeholder { font-size: 14px; font-weight: 400; color: var(--ink-soft); }
 
 /* 逐字轨道：每个单词一组，每个字符一个下划线格 */
 .letter-track {
@@ -270,6 +284,13 @@ body {
 .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 
 .hint-text { margin-top: 10px; font-size: 14px; color: var(--ink-soft); border-top: 1px dashed var(--line); padding-top: 8px; }
+
+.kbd-hints { margin-top: 10px; font-size: 12px; color: var(--ink-soft); }
+.kbd-hints kbd {
+  font-family: inherit; font-size: 11px;
+  border: 1px solid var(--line); padding: 1px 5px;
+  background: var(--bg-alt);
+}
 
 .record-area { margin-top: 14px; display: flex; align-items: center; gap: 12px; }
 .record-label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
