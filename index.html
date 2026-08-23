@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>剧情听写 Scene Dictation</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">SCENE DICTATION</span>
+      <span class="brand-sub">剧情听写</span>
+    </div>
+    <button id="soundToggle" class="btn btn-ghost" type="button" aria-pressed="true">声音：开</button>
+  </header>
+
+  <main class="layout">
+    <!-- 左列：语境与统计 -->
+    <aside class="col-left">
+      <section class="panel">
+        <h2 class="panel-label">课程</h2>
+        <select id="lessonSelect" class="lesson-select" aria-label="选择课程"></select>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-label">场景</h2>
+        <h1 id="sceneTitle" class="scene-title"></h1>
+        <p id="sceneSeries" class="scene-series"></p>
+        <p id="sceneSynopsis" class="scene-synopsis"></p>
+        <h3 class="panel-sublabel">人物</h3>
+        <ul id="sceneCharacters" class="scene-characters"></ul>
+        <h3 class="panel-sublabel">语气</h3>
+        <p id="sceneTone" class="scene-tone"></p>
+        <h3 class="panel-sublabel">剧情提示</h3>
+        <p id="sceneHint" class="scene-hint"></p>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-label">今日学习</h2>
+        <dl class="stats-grid" id="statsGrid">
+          <div><dt>完成句子</dt><dd id="statSentences">0</dd></div>
+          <div><dt>完成单词</dt><dd id="statWords">0</dd></div>
+          <div><dt>检查次数</dt><dd id="statChecks">0</dd></div>
+          <div><dt>播放原句</dt><dd id="statPlays">0</dd></div>
+          <div><dt>跟读录音</dt><dd id="statRecordings">0</dd></div>
+          <div><dt>学习时长</dt><dd id="statMinutes">0 分钟</dd></div>
+        </dl>
+        <div class="streak-row">
+          <span class="streak-label">连续学习</span>
+          <span class="streak-value"><em id="statStreak">0</em> 天</span>
+        </div>
+        <h3 class="panel-sublabel">最近 7 天有效操作</h3>
+        <div id="weekChart" class="week-chart" role="img" aria-label="最近 7 天每日有效操作柱状图"></div>
+      </section>
+    </aside>
+
+    <!-- 右列：画面 + 听写 -->
+    <section class="col-right">
+      <div class="media-frame">
+        <video id="sceneVideo" class="media-el" controls preload="metadata" hidden></video>
+        <img id="sceneImage" class="media-el" alt="" hidden>
+        <div id="localOverlay" class="local-overlay" hidden>
+          <p class="local-overlay-title">本地视频模式</p>
+          <p id="localOverlayDesc" class="local-overlay-desc">从你的电脑选择一段你合法拥有的视频，文件不会上传，也不会离开这台电脑。</p>
+          <label class="btn btn-primary file-btn">
+            选择本地视频
+            <input id="localFileInput" type="file" accept="video/*,audio/*" hidden>
+          </label>
+        </div>
+      </div>
+
+      <div class="dictation">
+        <div class="line-head">
+          <span id="lineSpeaker" class="line-speaker"></span>
+          <span id="lineProgress" class="line-progress"></span>
+        </div>
+        <p id="lineZh" class="line-zh"></p>
+
+        <div id="letterTrack" class="letter-track" aria-hidden="true"></div>
+
+        <label class="visually-hidden" for="answerInput">输入英文台词</label>
+        <input id="answerInput" class="answer-input" type="text" autocomplete="off"
+               autocapitalize="off" spellcheck="false" placeholder="听懂后，把英文台词打出来……">
+
+        <p id="feedback" class="feedback" aria-live="polite"></p>
+
+        <div id="answerReveal" class="answer-reveal" hidden>
+          <span class="answer-reveal-label">原句</span>
+          <p id="answerText" class="answer-text"></p>
+        </div>
+
+        <div class="controls">
+          <button id="checkBtn" class="btn btn-primary" type="button">检查答案</button>
+          <button id="hintBtn" class="btn" type="button">显示提示</button>
+          <button id="playBtn" class="btn" type="button" disabled>播放原句</button>
+          <button id="recordBtn" class="btn" type="button" disabled>开始跟读</button>
+        </div>
+        <p id="hintText" class="hint-text" hidden></p>
+
+        <div id="recordArea" class="record-area" hidden>
+          <span class="record-label">你的跟读</span>
+          <audio id="recordPlayback" controls></audio>
+        </div>
+
+        <nav class="line-nav" aria-label="句子导航">
+          <button id="prevBtn" class="btn" type="button">上一句</button>
+          <div id="lineDots" class="line-dots"></div>
+          <button id="nextBtn" class="btn" type="button">下一句</button>
+        </nav>
+      </div>
+    </section>
+  </main>
+
+  <script src="content.js"></script>
+  <script src="content.local.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

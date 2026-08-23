@@ -1,0 +1,8 @@
+# 系统文件
+.DS_Store
+
+# Claude Code 本地配置（含本机绝对路径，不入库）
+.claude/
+
+# oh-my-claudecode 会话状态文件，不入库
+.omc/
