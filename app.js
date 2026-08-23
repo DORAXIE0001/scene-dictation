@@ -7,6 +7,7 @@
   const KEY_STATS = 'sd-stats-v1';
   const KEY_PROGRESS = 'sd-progress-v1';
   const KEY_LOCAL_FILE_NAME = 'sd-local-file-name';
+  const KEY_SRT_PREFIX = 'sd-srt-'; // 每课一份导入的字幕，存本机浏览器
   const STATS_KEEP_DAYS = 90;
   // 有效学习时长口径：页面可见 + 最近 90 秒内有操作时，每 15 秒累计一次
   const ACTIVE_WINDOW_MS = 90 * 1000;
@@ -25,6 +26,7 @@
     statStreak: $('statStreak'), weekChart: $('weekChart'),
     video: $('sceneVideo'), image: $('sceneImage'),
     localOverlay: $('localOverlay'), localOverlayDesc: $('localOverlayDesc'), localFileInput: $('localFileInput'),
+    mediaBar: $('mediaBar'), mediaBarStatus: $('mediaBarStatus'), srtFileInput: $('srtFileInput'),
     lineSpeaker: $('lineSpeaker'), lineProgress: $('lineProgress'), lineZh: $('lineZh'),
     letterTrack: $('letterTrack'), answerInput: $('answerInput'), feedback: $('feedback'),
     answerReveal: $('answerReveal'), answerText: $('answerText'),
@@ -76,7 +78,19 @@
   }
 
   function currentLesson() { return LESSONS[lessonIndex]; }
-  function currentLine() { return currentLesson().lines[lineIndex]; }
+
+  // 本地课程若导入过字幕，用字幕生成的句子；否则用 content.js 里写的句子
+  function importedSrt(lesson) {
+    if (lesson.mediaMode !== 'local') return null;
+    const imp = loadJSON(KEY_SRT_PREFIX + lesson.id, null);
+    return (imp && Array.isArray(imp.lines) && imp.lines.length) ? imp : null;
+  }
+  function currentLines() {
+    const lesson = currentLesson();
+    const imp = importedSrt(lesson);
+    return imp ? imp.lines : lesson.lines;
+  }
+  function currentLine() { return currentLines()[lineIndex]; }
 
   // ---------- 每日统计 ----------
   function dayStats(key) {
@@ -359,6 +373,84 @@
     setFeedback('已挂载本地文件「' + file.name + '」，文件只在本页面内播放。', 'ok');
   });
 
+  // ---------- 字幕导入 ----------
+  // 解析 .srt：每块 = 序号 + 时间行 + 若干文本行；双语字幕按"是否含汉字"拆成 zh / en
+  function parseSrt(text) {
+    const cues = [];
+    const timeRe = /(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})\s*-->\s*(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})/;
+    const blocks = text.replace(/^﻿/, '').split(/\r?\n\s*\r?\n/);
+    blocks.forEach((block) => {
+      const rows = block.split(/\r?\n/).map((r) => r.trim()).filter(Boolean);
+      const ti = rows.findIndex((r) => timeRe.test(r));
+      if (ti === -1) return;
+      const m = rows[ti].match(timeRe);
+      const start = (+m[1]) * 3600 + (+m[2]) * 60 + (+m[3]) + (+m[4]) / 1000;
+      const end = (+m[5]) * 3600 + (+m[6]) * 60 + (+m[7]) + (+m[8]) / 1000;
+      const textRows = rows.slice(ti + 1)
+        // 去掉 <i> 之类的标签、{\an8} 之类的特效码、行首的对话短横线
+        .map((r) => r.replace(/<[^>]+>/g, '').replace(/\{\\[^}]*\}/g, '').replace(/^-+\s*/, '').trim())
+        .filter(Boolean);
+      const zh = textRows.filter((r) => /[一-鿿]/.test(r)).join(' ');
+      const en = textRows.filter((r) => !/[一-鿿]/.test(r)).join(' ').replace(/\s+/g, ' ').trim();
+      if (!/[a-z]/i.test(en)) return; // 纯音乐符号、纯中文条目对听写无意义，跳过
+      cues.push({ start: Math.round(start * 10) / 10, end: Math.round(end * 10) / 10, en, zh });
+    });
+    return cues;
+  }
+
+  // 中文字幕文件常见 GBK 编码，UTF-8 读出替换符（�）就换 GBK 重解
+  function decodeSrtBuffer(buf) {
+    const utf8 = new TextDecoder('utf-8').decode(buf);
+    if (!utf8.includes('�')) return utf8;
+    try { return new TextDecoder('gbk').decode(buf); } catch (e) { return utf8; }
+  }
+
+  function applyImportedSrt(name, text) {
+    const lesson = currentLesson();
+    const cues = parseSrt(text);
+    if (!cues.length) {
+      setFeedback('没能从「' + name + '」解析出英文台词，确认它是 .srt 格式的英文或双语字幕。', 'err');
+      return 0;
+    }
+    const lines = cues.map((c, i) => ({
+      id: lesson.id + '-srt-' + i,
+      speaker: '',
+      zh: c.zh || '（这一句没有中文字幕，先播放片段听一遍再输入）',
+      en: c.en,
+      hint: '共 ' + c.en.split(/\s+/).filter(Boolean).length + ' 个单词',
+      // 前后各留 0.3 秒，播放片段听起来不掐头去尾
+      startTime: Math.max(0, c.start - 0.3),
+      endTime: c.end + 0.3,
+    }));
+    saveJSON(KEY_SRT_PREFIX + lesson.id, { name, lines });
+    lineIndex = 0;
+    renderLine();
+    renderMediaBar();
+    setFeedback('已导入「' + name + '」，共 ' + lines.length + ' 句。字幕只保存在这台电脑的浏览器里。', 'ok');
+    return lines.length;
+  }
+
+  function renderMediaBar() {
+    const lesson = currentLesson();
+    el.mediaBar.hidden = lesson.mediaMode !== 'local';
+    if (el.mediaBar.hidden) return;
+    const imp = importedSrt(lesson);
+    el.mediaBarStatus.textContent = imp
+      ? '已导入「' + imp.name + '」（' + imp.lines.length + ' 句，刷新后仍保留）'
+      : '选本集的 .srt 字幕文件，自动生成全部听写句（双语字幕可带出中文意思）';
+  }
+
+  el.srtFileInput.addEventListener('change', () => {
+    const file = el.srtFileInput.files && el.srtFileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      applyImportedSrt(file.name, decodeSrtBuffer(reader.result));
+      el.srtFileInput.value = ''; // 允许重复选同一个文件
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
   window.addEventListener('beforeunload', () => {
     if (localFileUrl) URL.revokeObjectURL(localFileUrl);
     if (recordUrl) URL.revokeObjectURL(recordUrl);
@@ -389,15 +481,16 @@
   }
 
   function renderLine() {
-    const lesson = currentLesson();
-    const line = currentLine();
+    const lines = currentLines();
+    if (lineIndex >= lines.length) lineIndex = 0;
+    const line = lines[lineIndex];
     model = trackModel(line.en);
     prevWrongCount = 0;
     prevCompleted = new Set();
     prevInputLen = 0;
 
     el.lineSpeaker.textContent = line.speaker || '';
-    el.lineProgress.textContent = '第 ' + (lineIndex + 1) + ' / ' + lesson.lines.length + ' 句';
+    el.lineProgress.textContent = '第 ' + (lineIndex + 1) + ' / ' + lines.length + ' 句';
     el.lineZh.textContent = line.zh;
     el.hintText.hidden = true;
     el.hintText.textContent = line.hint || '暂无提示。';
@@ -430,18 +523,45 @@
   }
 
   function renderDots() {
-    const lesson = currentLesson();
+    const lines = currentLines();
     el.lineDots.innerHTML = '';
-    lesson.lines.forEach((line, i) => {
-      const dot = document.createElement('button');
-      dot.type = 'button';
-      dot.className = 'line-dot' + (i === lineIndex ? ' current' : '') + (lineDone(line) ? ' done' : '');
-      dot.setAttribute('aria-label', '第 ' + (i + 1) + ' 句' + (lineDone(line) ? '（已完成）' : ''));
-      dot.addEventListener('click', () => { lineIndex = i; renderLine(); });
-      el.lineDots.appendChild(dot);
-    });
+    if (lines.length > 20) {
+      // 字幕导入后句子成百上千，圆点导航失效，换成计数 + 跳转框
+      const doneCount = lines.filter(lineDone).length;
+      const info = document.createElement('span');
+      info.className = 'line-jump-info';
+      info.textContent = '已完成 ' + doneCount + ' / ' + lines.length + ' 句';
+      const jump = document.createElement('input');
+      jump.type = 'number';
+      jump.min = '1';
+      jump.max = String(lines.length);
+      jump.value = String(lineIndex + 1);
+      jump.className = 'line-jump-input';
+      jump.setAttribute('aria-label', '跳转到第几句');
+      const go = document.createElement('button');
+      go.type = 'button';
+      go.className = 'btn';
+      go.textContent = '跳转';
+      const doJump = () => {
+        const n = Math.min(lines.length, Math.max(1, Number(jump.value) || 1));
+        lineIndex = n - 1;
+        renderLine();
+      };
+      go.addEventListener('click', doJump);
+      jump.addEventListener('keydown', (e) => { if (e.key === 'Enter') doJump(); });
+      el.lineDots.append(info, jump, go);
+    } else {
+      lines.forEach((line, i) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'line-dot' + (i === lineIndex ? ' current' : '') + (lineDone(line) ? ' done' : '');
+        dot.setAttribute('aria-label', '第 ' + (i + 1) + ' 句' + (lineDone(line) ? '（已完成）' : ''));
+        dot.addEventListener('click', () => { lineIndex = i; renderLine(); });
+        el.lineDots.appendChild(dot);
+      });
+    }
     el.prevBtn.disabled = lineIndex === 0;
-    el.nextBtn.disabled = lineIndex === lesson.lines.length - 1;
+    el.nextBtn.disabled = lineIndex === lines.length - 1;
   }
 
   el.answerInput.addEventListener('input', (e) => {
@@ -580,7 +700,7 @@
   // ---------- 导航 ----------
   el.prevBtn.addEventListener('click', () => { if (lineIndex > 0) { lineIndex -= 1; renderLine(); } });
   el.nextBtn.addEventListener('click', () => {
-    if (lineIndex < currentLesson().lines.length - 1) { lineIndex += 1; renderLine(); }
+    if (lineIndex < currentLines().length - 1) { lineIndex += 1; renderLine(); }
   });
 
   // ---------- 课程渲染 ----------
@@ -601,6 +721,7 @@
     el.sceneTone.textContent = lesson.tone || '';
     el.sceneHint.textContent = lesson.sceneHint || '';
     renderMedia();
+    renderMediaBar();
     renderLine();
   }
 
@@ -626,4 +747,7 @@
   }
 
   init();
+
+  // 仅供自动化测试调用的内部钩子，正常使用不依赖它
+  window.__sdDebug = { parseSrt, applyImportedSrt };
 })();

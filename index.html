@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>剧情听写 Scene Dictation</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -69,6 +70,15 @@
             <input id="localFileInput" type="file" accept="video/*,audio/*" hidden>
           </label>
         </div>
+      </div>
+
+      <!-- 本地课程的素材工具条：导入字幕自动生成听写句 -->
+      <div id="mediaBar" class="media-bar" hidden>
+        <label class="btn file-btn">
+          导入字幕（.srt）
+          <input id="srtFileInput" type="file" accept=".srt" hidden>
+        </label>
+        <span id="mediaBarStatus" class="media-bar-status"></span>
       </div>
 
       <div class="dictation">

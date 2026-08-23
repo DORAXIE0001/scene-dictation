@@ -172,6 +172,16 @@ body {
 
 .file-btn { display: inline-flex; align-items: center; }
 
+/* ---------- 素材工具条 ---------- */
+
+.media-bar {
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 12px; padding: 10px 14px;
+  background: var(--bg); border: 1px solid var(--line);
+}
+
+.media-bar-status { font-size: 13px; color: var(--ink-soft); }
+
 /* ---------- 听写区 ---------- */
 
 .dictation {
@@ -267,6 +277,16 @@ body {
 
 .line-dot.done { background: var(--ink); }
 .line-dot.current { background: var(--red); border-color: var(--red); }
+
+/* 句子很多（字幕导入）时的跳转导航 */
+.line-jump-info { font-size: 13px; color: var(--ink-soft); margin-right: 4px; }
+
+.line-jump-input {
+  width: 72px; padding: 7px 8px;
+  font: inherit; font-size: 13px;
+  border: 1px solid var(--ink); border-radius: 0;
+  background: var(--bg); color: var(--ink);
+}
 
 /* ---------- 窄屏基本兼容（不反向决定桌面结构） ---------- */
 
