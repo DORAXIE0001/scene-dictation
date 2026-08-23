@@ -6,3 +6,20 @@
 
 # oh-my-claudecode 会话状态文件，不入库
 .omc/
+
+# 个人学习视频目录：受版权保护的素材绝不入库
+1/
+media/
+
+# 兜底：任何音视频/字幕文件都不允许进仓库（内置素材只用 SVG 原创图）
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.mp3
+*.m4a
+*.wav
+*.srt
+*.ass
+*.vtt
+*.baiduyun.*
