@@ -229,7 +229,9 @@
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'en-US';
     utter.rate = 0.95;
-    const voice = speechSynthesis.getVoices().find((v) => v.lang && v.lang.startsWith('en'));
+    // 优先本机语音（localService）：Chrome 列表里混着 Google 网络语音，断网会静音
+    const enVoices = speechSynthesis.getVoices().filter((v) => v.lang && v.lang.startsWith('en'));
+    const voice = enVoices.find((v) => v.localService) || enVoices[0];
     if (voice) utter.voice = voice;
     speechSynthesis.speak(utter);
   }
