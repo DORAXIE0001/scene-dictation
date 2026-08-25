@@ -78,9 +78,14 @@
 
   // 判定口径：只比较字母和数字，忽略大小写、标点与多余空格
   const lettersOf = (s) => (s.match(/[a-z0-9]/gi) || []).join('').toLowerCase();
-  function normalize(s) {
-    return s.toLowerCase().split(/\s+/).map(lettersOf).filter(Boolean).join(' ');
-  }
+
+  // 切词：标点本身就是分词符，所以「Normally,there's」和「Normally, there's」等价，
+  // 逗号后不必再补空格；撇号和连字符算词内字符，保证 there's / well-known 不被拆开。
+  const WORD_RE = /[a-z0-9]+(?:['’-][a-z0-9]+)*/gi;
+  const tokenize = (s) => (s.match(WORD_RE) || []).map(lettersOf).filter(Boolean);
+
+  // 判定是否通过直接看 evaluate 的结果，保证「轨道全对」与「检查通过」永远一致
+  const isPerfect = (res) => res.wrongCount === 0 && res.pendingCount === 0 && res.extraWords === 0;
 
   function currentLesson() { return LESSONS[lessonIndex]; }
 
@@ -261,14 +266,26 @@
 
   // 对照 typed 内容给每个格子标状态，返回 {wrongCount, completed:Set<单词下标>}
   function evaluate(model, typed) {
-    const typedWords = typed.split(/\s+/).filter(Boolean).map(lettersOf);
+    const typedWords = tokenize(typed);
     let wrongCount = 0; // 全部错误，含轨道上看不见的（多打的字母、多打的词）
     let redCount = 0;   // 轨道上真正标红的格子数
     let pendingCount = 0; // 还空着没写的格子数
     let overflowWord = null; // 第一个被打超长的词
+    let ti = 0; // 输入词的游标：纯标点的词组不消耗它
     const completed = new Set();
     model.forEach((wm, wi) => {
-      const typedLetters = typedWords[wi] || '';
+      if (!wm.letters) {
+        // 例如单独成组的破折号，只展示不参与判定
+        wm.states = wm.cells.map((cell) => ({ state: 'punct', show: cell.ch }));
+        return;
+      }
+      // 按需取词：一直取到字母数够本组为止，这样「U.S.A.」拆成三段、
+      // 或者一个词被误敲成两截，都能和轨道上的格子对上
+      let typedLetters = '';
+      while (ti < typedWords.length && typedLetters.length < wm.letters.length) {
+        typedLetters += typedWords[ti];
+        ti += 1;
+      }
       let li = 0;
       wm.states = wm.cells.map((cell) => {
         if (!cell.isLetter) return { state: 'punct', show: cell.ch };
@@ -292,7 +309,7 @@
         if (overflowWord == null) overflowWord = wm.word.replace(/[^a-z0-9']/gi, '');
       }
     });
-    const extraWords = Math.max(0, typedWords.length - model.length);
+    const extraWords = Math.max(0, typedWords.length - ti);
     if (extraWords > 0) wrongCount += 1;
     return { wrongCount, redCount, pendingCount, extraWords, overflowWord, completed };
   }
@@ -728,7 +745,9 @@
       return;
     }
     bump('checks');
-    if (normalize(raw) === normalize(line.en)) {
+    const res = evaluate(model, raw);
+    paintTrack(model);
+    if (isPerfect(res)) {
       el.answerReveal.hidden = false;
       el.answerText.textContent = line.en;
       setUnlocked(true);
@@ -739,7 +758,7 @@
       setFeedback('完全正确！原句和跟读已解锁。', 'ok');
     } else {
       setUnlocked(false);
-      setFeedback(failureMessage(evaluate(model, raw)), 'err');
+      setFeedback(failureMessage(res), 'err');
     }
   });
 
