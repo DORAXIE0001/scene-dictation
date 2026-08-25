@@ -54,6 +54,7 @@
   let lastActivity = Date.now();
   // 输入判定的上一次快照，用来区分「新增错误」「新完成的单词」，删除字符时不触发任何声音
   let prevWrongCount = 0;
+  let prevRedCount = 0;
   let prevCompleted = new Set();
   let prevInputLen = 0;
 
@@ -261,7 +262,10 @@
   // 对照 typed 内容给每个格子标状态，返回 {wrongCount, completed:Set<单词下标>}
   function evaluate(model, typed) {
     const typedWords = typed.split(/\s+/).filter(Boolean).map(lettersOf);
-    let wrongCount = 0;
+    let wrongCount = 0; // 全部错误，含轨道上看不见的（多打的字母、多打的词）
+    let redCount = 0;   // 轨道上真正标红的格子数
+    let pendingCount = 0; // 还空着没写的格子数
+    let overflowWord = null; // 第一个被打超长的词
     const completed = new Set();
     model.forEach((wm, wi) => {
       const typedLetters = typedWords[wi] || '';
@@ -271,21 +275,43 @@
         const typedCh = typedLetters[li];
         const expected = cell.ch.toLowerCase();
         li += 1;
-        if (typedCh == null) return { state: 'pending', show: '' };
+        if (typedCh == null) { pendingCount += 1; return { state: 'pending', show: '' }; }
         if (typedCh === expected.toLowerCase() || typedCh === lettersOf(cell.ch)) {
           return { state: 'correct', show: cell.ch };
         }
         wrongCount += 1;
+        redCount += 1;
         return { state: 'wrong', show: typedCh };
       });
       if (typedLetters.length === wm.letters.length && typedLetters === wm.letters) {
         completed.add(wi);
       }
-      // 单词打多了也算错
-      if (typedLetters.length > wm.letters.length) wrongCount += typedLetters.length - wm.letters.length;
+      // 单词打多了也算错（轨道上没有格子能显示，所以要单独记下是哪个词）
+      if (typedLetters.length > wm.letters.length) {
+        wrongCount += typedLetters.length - wm.letters.length;
+        if (overflowWord == null) overflowWord = wm.word.replace(/[^a-z0-9']/gi, '');
+      }
     });
-    if (typedWords.length > model.length) wrongCount += 1;
-    return { wrongCount, completed };
+    const extraWords = Math.max(0, typedWords.length - model.length);
+    if (extraWords > 0) wrongCount += 1;
+    return { wrongCount, redCount, pendingCount, extraWords, overflowWord, completed };
+  }
+
+  // 检查失败时说清楚差在哪：红格、没写完、多写了，三种情况提示不同
+  function failureMessage(res) {
+    if (res.redCount > 0) {
+      return '有 ' + res.redCount + ' 个字母不对，看轨道上标红的位置。';
+    }
+    if (res.pendingCount > 0) {
+      return '还没写完——轨道上还有 ' + res.pendingCount + ' 个空格没填。';
+    }
+    if (res.extraWords > 0) {
+      return '多写了 ' + res.extraWords + ' 个词，删掉多出来的部分再检查。';
+    }
+    if (res.overflowWord) {
+      return '「' + res.overflowWord + '」这个词多打了字母，删掉多余的再检查。';
+    }
+    return '和原句还对不上，检查一下有没有多打或漏打。';
   }
 
   function paintTrack(model) {
@@ -517,6 +543,7 @@
     const line = lines[lineIndex];
     model = trackModel(line.en);
     prevWrongCount = 0;
+    prevRedCount = 0;
     prevCompleted = new Set();
     prevInputLen = 0;
 
@@ -541,6 +568,7 @@
       const res = evaluate(model, line.en);
       paintTrack(model);
       prevWrongCount = res.wrongCount;
+      prevRedCount = res.redCount;
       prevCompleted = res.completed;
       prevInputLen = line.en.length;
       el.answerReveal.hidden = false;
@@ -603,6 +631,11 @@
     el.nextBtn.disabled = lineIndex === lines.length - 1;
   }
 
+  // 内容一变，上一次检查的失败提示就不再成立，避免它和轨道现状互相矛盾
+  function clearStaleError() {
+    if (el.feedback.classList.contains('err')) setFeedback('');
+  }
+
   el.answerInput.addEventListener('input', (e) => {
     const val = el.answerInput.value;
     const grew = val.length > prevInputLen;
@@ -617,7 +650,10 @@
         // 强制重启动画
         void el.trackShell.offsetWidth;
         el.trackShell.classList.add('shake');
-        setFeedback('这个字母不太对，看看红色的位置。', 'err');
+        // 错误分两种：轨道上标红的（打错字母）和标不出来的（这个词已经写满还在打）
+        setFeedback(res.redCount > prevRedCount
+          ? '这个字母不太对，看看红色的位置。'
+          : '这个词已经写满了，多打的字母删掉。', 'err');
       } else {
         const newlyDone = [...res.completed].filter((wi) => !prevCompleted.has(wi));
         if (newlyDone.length > 0) {
@@ -632,12 +668,17 @@
         } else if (insertedLetter) {
           tick();
           setFeedback('对了，保持这个节奏。', 'ok');
+        } else {
+          clearStaleError();
         }
       }
+    } else {
+      // 删除字符：只更新轨道，不触发任何声音
+      clearStaleError();
     }
-    // 删除字符：只更新轨道，不触发任何声音
 
     prevWrongCount = res.wrongCount;
+    prevRedCount = res.redCount;
     prevCompleted = res.completed;
     prevInputLen = val.length;
   });
@@ -698,7 +739,7 @@
       setFeedback('完全正确！原句和跟读已解锁。', 'ok');
     } else {
       setUnlocked(false);
-      setFeedback('还差一点，对照红色格子改一改，再检查一次。', 'err');
+      setFeedback(failureMessage(evaluate(model, raw)), 'err');
     }
   });
 
