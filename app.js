@@ -31,6 +31,7 @@
     subMask: $('subMask'), maskToggle: $('maskToggle'),
     lineSpeaker: $('lineSpeaker'), lineProgress: $('lineProgress'), lineZh: $('lineZh'),
     letterTrack: $('letterTrack'), answerInput: $('answerInput'), feedback: $('feedback'),
+    trackShell: $('trackShell'), trackPlaceholder: $('trackPlaceholder'),
     answerReveal: $('answerReveal'), answerText: $('answerText'),
     checkBtn: $('checkBtn'), hintBtn: $('hintBtn'), playBtn: $('playBtn'), recordBtn: $('recordBtn'),
     hintText: $('hintText'), recordArea: $('recordArea'), recordPlayback: $('recordPlayback'),
@@ -289,17 +290,25 @@
 
   function paintTrack(model) {
     el.letterTrack.innerHTML = '';
+    // 光标落在第一个待输入的字母格上（输入始终追加在末尾，所以它就是下一个要写的位置）
+    const showCaret = document.activeElement === el.answerInput;
+    let caretPlaced = false;
     model.forEach((wm) => {
       const wordEl = document.createElement('span');
       wordEl.className = 'track-word';
       (wm.states || wm.cells.map((c) => ({ state: c.isLetter ? 'pending' : 'punct', show: c.isLetter ? '' : c.ch }))).forEach((st) => {
         const cell = document.createElement('span');
         cell.className = 'track-cell ' + st.state;
+        if (showCaret && !caretPlaced && st.state === 'pending') {
+          cell.className += ' caret';
+          caretPlaced = true;
+        }
         cell.textContent = st.show;
         wordEl.appendChild(cell);
       });
       el.letterTrack.appendChild(wordEl);
     });
+    el.trackPlaceholder.hidden = el.answerInput.value.length > 0;
   }
 
   // ---------- 反馈文案 ----------
@@ -375,6 +384,7 @@
     el.video.hidden = false;
     el.localOverlay.hidden = true;
     el.video.addEventListener('loadedmetadata', seekToLine, { once: true });
+    renderSubMask();
     setFeedback('已挂载本地文件「' + file.name + '」，文件只在本页面内播放。', 'ok');
   });
 
@@ -449,7 +459,8 @@
   // 遮字幕开关：很多下载视频把双语字幕烧进了画面，英文答案会直接暴露，用黑条盖住底部
   let subMaskOn = localStorage.getItem(KEY_SUB_MASK) === '1';
   function renderSubMask() {
-    el.subMask.hidden = !subMaskOn;
+    // 只在本地视频真正播放时遮挡；内置插画课程不该被黑条盖住
+    el.subMask.hidden = !subMaskOn || currentLesson().mediaMode !== 'local' || !localFileUrl;
     el.maskToggle.textContent = subMaskOn ? '遮字幕：开' : '遮字幕：关';
     el.maskToggle.setAttribute('aria-pressed', String(subMaskOn));
   }
@@ -546,6 +557,8 @@
 
     renderDots();
     seekToLine();
+    // 换句后光标留在轨道上，接着打字即可，不用再点一次
+    if (document.activeElement === el.answerInput) paintTrack(model);
   }
 
   function renderDots() {
@@ -600,10 +613,10 @@
       const insertedLetter = e.data && lettersOf(e.data).length > 0;
       if (res.wrongCount > prevWrongCount) {
         buzz();
-        el.answerInput.classList.remove('shake');
+        el.trackShell.classList.remove('shake');
         // 强制重启动画
-        void el.answerInput.offsetWidth;
-        el.answerInput.classList.add('shake');
+        void el.trackShell.offsetWidth;
+        el.trackShell.classList.add('shake');
         setFeedback('这个字母不太对，看看红色的位置。', 'err');
       } else {
         const newlyDone = [...res.completed].filter((wi) => !prevCompleted.has(wi));
@@ -628,6 +641,20 @@
     prevCompleted = res.completed;
     prevInputLen = val.length;
   });
+
+  // 点轨道任意位置都进入输入状态；光标一律回到末尾，与"追加输入"的判定逻辑保持一致
+  function focusInput() {
+    el.answerInput.focus({ preventScroll: true });
+    const len = el.answerInput.value.length;
+    el.answerInput.setSelectionRange(len, len);
+  }
+  el.trackShell.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    focusInput();
+    paintTrack(model);
+  });
+  el.answerInput.addEventListener('focus', () => paintTrack(model));
+  el.answerInput.addEventListener('blur', () => paintTrack(model));
 
   el.listenBtn.addEventListener('click', () => {
     if (!localFileUrl) {
@@ -771,6 +798,7 @@
     el.sceneHint.textContent = lesson.sceneHint || '';
     renderMedia();
     renderMediaBar();
+    renderSubMask();
     renderLine();
   }
 

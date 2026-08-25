@@ -90,11 +90,14 @@
         </div>
         <p id="lineZh" class="line-zh"></p>
 
-        <div id="letterTrack" class="letter-track" aria-hidden="true"></div>
-
-        <label class="visually-hidden" for="answerInput">输入英文台词</label>
-        <input id="answerInput" class="answer-input" type="text" autocomplete="off"
-               autocapitalize="off" spellcheck="false" placeholder="听懂后，把英文台词打出来……">
+        <!-- 直接在横线上输入：真实 input 透明覆盖在轨道上，轨道负责显示 -->
+        <div id="trackShell" class="track-shell">
+          <div id="letterTrack" class="letter-track" aria-hidden="true"></div>
+          <span id="trackPlaceholder" class="track-placeholder">点这里，直接在横线上打字</span>
+          <label class="visually-hidden" for="answerInput">输入英文台词</label>
+          <input id="answerInput" class="answer-input" type="text" autocomplete="off"
+                 autocapitalize="off" spellcheck="false" autocorrect="off">
+        </div>
 
         <p id="feedback" class="feedback" aria-live="polite"></p>
 
