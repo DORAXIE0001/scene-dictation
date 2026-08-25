@@ -277,6 +277,9 @@ body {
 .track-cell.wrong { color: var(--red); border-bottom-color: var(--red); }
 .track-cell.punct { color: #b5b5b8; border-bottom-color: transparent; width: 12px; }
 
+/* 超出原句的多余字母：整组标红，和正文格子拉开距离 */
+.track-extra { margin-left: 6px; border-left: 2px solid var(--red); padding-left: 8px; }
+
 /* 光标：下一个待输入格上的闪烁竖线 */
 .track-cell.caret::after {
   content: '';

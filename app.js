@@ -85,7 +85,7 @@
   const tokenize = (s) => (s.match(WORD_RE) || []).map(lettersOf).filter(Boolean);
 
   // 判定是否通过直接看 evaluate 的结果，保证「轨道全对」与「检查通过」永远一致
-  const isPerfect = (res) => res.wrongCount === 0 && res.pendingCount === 0 && res.extraWords === 0;
+  const isPerfect = (res) => res.redCount === 0 && res.pendingCount === 0 && res.extraLetters === 0;
 
   function currentLesson() { return LESSONS[lessonIndex]; }
 
@@ -266,52 +266,32 @@
 
   // 对照 typed 内容给每个格子标状态，返回 {wrongCount, completed:Set<单词下标>}
   function evaluate(model, typed) {
-    const typedWords = tokenize(typed);
-    let wrongCount = 0; // 全部错误，含轨道上看不见的（多打的字母、多打的词）
-    let redCount = 0;   // 轨道上真正标红的格子数
-    let pendingCount = 0; // 还空着没写的格子数
-    let overflowWord = null; // 第一个被打超长的词
-    let ti = 0; // 输入词的游标：纯标点的词组不消耗它
+    // 把输入拉平成一条字母流：词间空格、标点全部不参与比对，
+    // 所以「Normally, there's」「Normally,there's」「Normallytheres」判定完全等价。
+    const stream = tokenize(typed).join('');
+    let si = 0;           // 字母流读到哪了
+    let redCount = 0;     // 轨道上标红的格子数
+    let pendingCount = 0; // 还空着没填的格子数
     const completed = new Set();
     model.forEach((wm, wi) => {
-      if (!wm.letters) {
-        // 例如单独成组的破折号，只展示不参与判定
-        wm.states = wm.cells.map((cell) => ({ state: 'punct', show: cell.ch }));
-        return;
-      }
-      // 按需取词：一直取到字母数够本组为止，这样「U.S.A.」拆成三段、
-      // 或者一个词被误敲成两截，都能和轨道上的格子对上
-      let typedLetters = '';
-      while (ti < typedWords.length && typedLetters.length < wm.letters.length) {
-        typedLetters += typedWords[ti];
-        ti += 1;
-      }
-      let li = 0;
+      let filled = true;
+      let allRight = true;
       wm.states = wm.cells.map((cell) => {
         if (!cell.isLetter) return { state: 'punct', show: cell.ch };
-        const typedCh = typedLetters[li];
-        const expected = cell.ch.toLowerCase();
-        li += 1;
-        if (typedCh == null) { pendingCount += 1; return { state: 'pending', show: '' }; }
-        if (typedCh === expected.toLowerCase() || typedCh === lettersOf(cell.ch)) {
-          return { state: 'correct', show: cell.ch };
-        }
-        wrongCount += 1;
+        const typedCh = stream[si];
+        if (typedCh == null) { pendingCount += 1; filled = false; return { state: 'pending', show: '' }; }
+        si += 1;
+        if (typedCh === lettersOf(cell.ch)) return { state: 'correct', show: cell.ch };
         redCount += 1;
+        allRight = false;
         return { state: 'wrong', show: typedCh };
       });
-      if (typedLetters.length === wm.letters.length && typedLetters === wm.letters) {
-        completed.add(wi);
-      }
-      // 单词打多了也算错（轨道上没有格子能显示，所以要单独记下是哪个词）
-      if (typedLetters.length > wm.letters.length) {
-        wrongCount += typedLetters.length - wm.letters.length;
-        if (overflowWord == null) overflowWord = wm.word.replace(/[^a-z0-9']/gi, '');
-      }
+      if (wm.letters && filled && allRight) completed.add(wi);
     });
-    const extraWords = Math.max(0, typedWords.length - ti);
-    if (extraWords > 0) wrongCount += 1;
-    return { wrongCount, redCount, pendingCount, extraWords, overflowWord, completed };
+    // 超出原句长度的部分：挂在轨道末尾用红格显示，不能让它变成看不见的错误
+    model.extraTail = stream.slice(si);
+    const extraLetters = model.extraTail.length;
+    return { wrongCount: redCount + extraLetters, redCount, pendingCount, extraLetters, completed };
   }
 
   // 检查失败时说清楚差在哪：红格、没写完、多写了，三种情况提示不同
@@ -322,11 +302,8 @@
     if (res.pendingCount > 0) {
       return '还没写完——轨道上还有 ' + res.pendingCount + ' 个空格没填。';
     }
-    if (res.extraWords > 0) {
-      return '多写了 ' + res.extraWords + ' 个词，删掉多出来的部分再检查。';
-    }
-    if (res.overflowWord) {
-      return '「' + res.overflowWord + '」这个词多打了字母，删掉多余的再检查。';
+    if (res.extraLetters > 0) {
+      return '比原句多打了 ' + res.extraLetters + ' 个字母，删掉末尾标红的部分再检查。';
     }
     return '和原句还对不上，检查一下有没有多打或漏打。';
   }
@@ -351,6 +328,18 @@
       });
       el.letterTrack.appendChild(wordEl);
     });
+    // 超出原句的字母单独成组挂在末尾，让"多打了"这件事看得见
+    if (model.extraTail) {
+      const extraEl = document.createElement('span');
+      extraEl.className = 'track-word track-extra';
+      model.extraTail.split('').forEach((ch) => {
+        const cell = document.createElement('span');
+        cell.className = 'track-cell wrong';
+        cell.textContent = ch;
+        extraEl.appendChild(cell);
+      });
+      el.letterTrack.appendChild(extraEl);
+    }
     el.trackPlaceholder.hidden = el.answerInput.value.length > 0;
   }
 
@@ -667,10 +656,10 @@
         // 强制重启动画
         void el.trackShell.offsetWidth;
         el.trackShell.classList.add('shake');
-        // 错误分两种：轨道上标红的（打错字母）和标不出来的（这个词已经写满还在打）
+        // 打错字母与超出原句长度，两种错的改法不同
         setFeedback(res.redCount > prevRedCount
           ? '这个字母不太对，看看红色的位置。'
-          : '这个词已经写满了，多打的字母删掉。', 'err');
+          : '已经超出原句长度了，末尾标红的字母删掉。', 'err');
       } else {
         const newlyDone = [...res.completed].filter((wi) => !prevCompleted.has(wi));
         if (newlyDone.length > 0) {
