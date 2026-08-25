@@ -65,10 +65,11 @@
         <div id="localOverlay" class="local-overlay" hidden>
           <p class="local-overlay-title">本地视频模式</p>
           <p id="localOverlayDesc" class="local-overlay-desc">从你的电脑选择一段你合法拥有的视频，文件不会上传，也不会离开这台电脑。</p>
-          <label class="btn btn-primary file-btn">
-            选择本地视频
-            <input id="localFileInput" type="file" accept="video/*,audio/*" hidden>
-          </label>
+          <div class="local-overlay-actions">
+            <button id="resumeVideoBtn" class="btn btn-primary" type="button" hidden></button>
+            <button id="pickVideoBtn" class="btn btn-primary" type="button">选择本地视频</button>
+          </div>
+          <input id="localFileInput" type="file" accept="video/*,audio/*" hidden>
         </div>
         <div id="subMask" class="sub-mask" hidden></div>
       </div>

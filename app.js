@@ -27,6 +27,7 @@
     statStreak: $('statStreak'), weekChart: $('weekChart'),
     video: $('sceneVideo'), image: $('sceneImage'),
     localOverlay: $('localOverlay'), localOverlayDesc: $('localOverlayDesc'), localFileInput: $('localFileInput'),
+    resumeVideoBtn: $('resumeVideoBtn'), pickVideoBtn: $('pickVideoBtn'),
     mediaBar: $('mediaBar'), mediaBarStatus: $('mediaBarStatus'), srtFileInput: $('srtFileInput'),
     subMask: $('subMask'), maskToggle: $('maskToggle'),
     lineSpeaker: $('lineSpeaker'), lineProgress: $('lineProgress'), lineZh: $('lineZh'),
@@ -308,39 +309,99 @@
     return '和原句还对不上，检查一下有没有多打或漏打。';
   }
 
+  // 输入框里第 pos 个字符之前，已经打了多少个字母（标点空格不算）
+  const letterIndexAt = (value, pos) => (value.slice(0, pos).match(/[a-z0-9]/gi) || []).length;
+
+  // 反向换算：把光标放到第 k 个字母之前，对应输入框的哪个位置
+  function rawPosOfLetter(value, k) {
+    if (k <= 0) return 0;
+    let n = 0;
+    for (let i = 0; i < value.length; i += 1) {
+      if (/[a-z0-9]/i.test(value[i])) {
+        if (n === k) return i;
+        n += 1;
+      }
+    }
+    return value.length;
+  }
+
+  // 选区终点要落在第 k-1 个字母之后，否则会把词后面的空格一起选进去，
+  // 覆盖输入时两个词就粘在一起了
+  function rawPosAfterLetter(value, k) {
+    if (k <= 0) return 0;
+    let n = 0;
+    for (let i = 0; i < value.length; i += 1) {
+      if (/[a-z0-9]/i.test(value[i])) {
+        n += 1;
+        if (n === k) return i + 1;
+      }
+    }
+    return value.length;
+  }
+
+  let letterCells = [];  // 轨道上所有承载字母的格子，下标即字母序号
+  let wordRanges = [];   // 每个词占用的字母序号区间，供双击选词用
+
   function paintTrack(model) {
     el.letterTrack.innerHTML = '';
-    // 光标落在第一个待输入的字母格上（输入始终追加在末尾，所以它就是下一个要写的位置）
-    const showCaret = document.activeElement === el.answerInput;
-    let caretPlaced = false;
+    letterCells = [];
+    wordRanges = [];
     model.forEach((wm) => {
       const wordEl = document.createElement('span');
       wordEl.className = 'track-word';
+      const from = letterCells.length;
       (wm.states || wm.cells.map((c) => ({ state: c.isLetter ? 'pending' : 'punct', show: c.isLetter ? '' : c.ch }))).forEach((st) => {
         const cell = document.createElement('span');
         cell.className = 'track-cell ' + st.state;
-        if (showCaret && !caretPlaced && st.state === 'pending') {
-          cell.className += ' caret';
-          caretPlaced = true;
-        }
         cell.textContent = st.show;
+        if (st.state !== 'punct') {
+          cell.dataset.li = String(letterCells.length);
+          letterCells.push(cell);
+        }
         wordEl.appendChild(cell);
       });
+      if (letterCells.length > from) wordRanges.push({ from, to: letterCells.length });
       el.letterTrack.appendChild(wordEl);
     });
     // 超出原句的字母单独成组挂在末尾，让"多打了"这件事看得见
     if (model.extraTail) {
       const extraEl = document.createElement('span');
       extraEl.className = 'track-word track-extra';
+      const from = letterCells.length;
       model.extraTail.split('').forEach((ch) => {
         const cell = document.createElement('span');
         cell.className = 'track-cell wrong';
         cell.textContent = ch;
+        cell.dataset.li = String(letterCells.length);
+        letterCells.push(cell);
         extraEl.appendChild(cell);
       });
+      wordRanges.push({ from, to: letterCells.length });
       el.letterTrack.appendChild(extraEl);
     }
+    paintCaret();
     el.trackPlaceholder.hidden = el.answerInput.value.length > 0;
+  }
+
+  // 按输入框当前的光标/选区，在轨道上画出光标条和选中高亮
+  function paintCaret() {
+    letterCells.forEach((c) => c.classList.remove('caret', 'caret-end', 'sel'));
+    if (document.activeElement !== el.answerInput) return;
+    const val = el.answerInput.value;
+    const a = letterIndexAt(val, el.answerInput.selectionStart || 0);
+    const b = letterIndexAt(val, el.answerInput.selectionEnd || 0);
+    const from = Math.min(a, b);
+    const to = Math.max(a, b);
+    if (to > from) {
+      for (let i = from; i < to; i += 1) {
+        if (letterCells[i]) letterCells[i].classList.add('sel');
+      }
+      return;
+    }
+    // 光标位置：反向选择时跟随起点，否则跟随终点
+    const at = el.answerInput.selectionDirection === 'backward' ? from : to;
+    if (letterCells[at]) letterCells[at].classList.add('caret');
+    else if (letterCells.length) letterCells[letterCells.length - 1].classList.add('caret-end');
   }
 
   // ---------- 反馈文案 ----------
@@ -372,10 +433,8 @@
       } else {
         el.video.hidden = true;
         el.localOverlay.hidden = false;
-        const savedName = localStorage.getItem(KEY_LOCAL_FILE_NAME);
-        el.localOverlayDesc.textContent = savedName
-          ? '刷新后浏览器出于安全要求需要重新选择文件（上次选的是「' + savedName + '」）。文件不会上传，也不会离开这台电脑。'
-          : '从你的电脑选择一段你合法拥有的视频，文件不会上传，也不会离开这台电脑。';
+        el.localOverlayDesc.textContent = '从你的电脑选择一段你合法拥有的视频，文件不会上传，也不会离开这台电脑。';
+        offerSavedVideo(lesson);
       }
     } else {
       el.localOverlay.hidden = true;
@@ -406,9 +465,7 @@
     }
   }
 
-  el.localFileInput.addEventListener('change', () => {
-    const file = el.localFileInput.files && el.localFileInput.files[0];
-    if (!file) return;
+  function attachVideoFile(file) {
     if (localFileUrl) URL.revokeObjectURL(localFileUrl);
     localFileUrl = URL.createObjectURL(file);
     localStorage.setItem(KEY_LOCAL_FILE_NAME, file.name);
@@ -418,6 +475,102 @@
     el.video.addEventListener('loadedmetadata', seekToLine, { once: true });
     renderSubMask();
     setFeedback('已挂载本地文件「' + file.name + '」，文件只在本页面内播放。', 'ok');
+  }
+
+  el.localFileInput.addEventListener('change', () => {
+    const file = el.localFileInput.files && el.localFileInput.files[0];
+    if (file) attachVideoFile(file);
+  });
+
+  // ---------- 记住上次选过的视频 ----------
+  // 浏览器不允许网页自动读硬盘文件，但 File System Access API 可以保存一个"文件句柄"，
+  // 下次刷新只要点一下授权就能直接打开，不必再去文件夹里翻。句柄存在 IndexedDB，
+  // 里面没有文件内容，视频本身始终留在你电脑上。
+  const FSA_OK = typeof window.showOpenFilePicker === 'function';
+  const DB_NAME = 'scene-dictation';
+  const DB_STORE = 'handles';
+
+  function openDb() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(DB_STORE);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function idbPut(key, val) {
+    return openDb().then((db) => new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put(val, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    }));
+  }
+
+  function idbGet(key) {
+    return openDb().then((db) => new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readonly');
+      const req = tx.objectStore(DB_STORE).get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    }));
+  }
+
+  const handleKey = (lesson) => 'video:' + lesson.id;
+
+  async function useHandle(handle) {
+    const file = await handle.getFile();
+    attachVideoFile(file);
+  }
+
+  // 进入本地课程时，如果之前存过句柄就把"继续上次的视频"按钮亮出来；
+  // 浏览器仍在授权期内的话直接加载，连点都不用点。
+  async function offerSavedVideo(lesson) {
+    el.resumeVideoBtn.hidden = true;
+    if (!FSA_OK) return;
+    let handle;
+    try { handle = await idbGet(handleKey(lesson)); } catch (e) { return; }
+    if (!handle) return;
+    let perm = 'prompt';
+    try { perm = await handle.queryPermission({ mode: 'read' }); } catch (e) { /* 句柄已失效 */ }
+    if (perm === 'granted') {
+      try { await useHandle(handle); return; } catch (e) { /* 文件被移动或删除，退回手选 */ }
+    }
+    el.resumeVideoBtn.hidden = false;
+    el.resumeVideoBtn.textContent = '继续上次的视频（' + handle.name + '）';
+    el.pickVideoBtn.classList.remove('btn-primary');
+  }
+
+  el.resumeVideoBtn.addEventListener('click', async () => {
+    const handle = await idbGet(handleKey(currentLesson()));
+    if (!handle) return;
+    try {
+      const perm = await handle.requestPermission({ mode: 'read' });
+      if (perm !== 'granted') {
+        setFeedback('没拿到文件读取授权，可以改用「选择本地视频」重新挑一次。', 'err');
+        return;
+      }
+      await useHandle(handle);
+    } catch (e) {
+      setFeedback('上次那个文件打不开了（可能被移动或改名），请重新选择。', 'err');
+    }
+  });
+
+  el.pickVideoBtn.addEventListener('click', async () => {
+    if (!FSA_OK) { el.localFileInput.click(); return; }
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [{
+          description: '视频或音频',
+          accept: { 'video/*': ['.mp4', '.mkv', '.mov', '.m4v', '.webm'], 'audio/*': ['.mp3', '.m4a', '.wav'] },
+        }],
+      });
+      await idbPut(handleKey(currentLesson()), handle);
+      await useHandle(handle);
+    } catch (e) {
+      // 用户取消选择不是错误，静默忽略
+    }
   });
 
   // ---------- 字幕导入 ----------
@@ -689,19 +842,73 @@
     prevInputLen = val.length;
   });
 
-  // 点轨道任意位置都进入输入状态；光标一律回到末尾，与"追加输入"的判定逻辑保持一致
-  function focusInput() {
-    el.answerInput.focus({ preventScroll: true });
-    const len = el.answerInput.value.length;
-    el.answerInput.setSelectionRange(len, len);
+  // ---------- 在轨道上直接定位光标 ----------
+  // 找出鼠标落点最近的字母格，并判断光标该落在它左边还是右边
+  function letterIndexAtPoint(x, y) {
+    if (!letterCells.length) return 0;
+    let best = null;
+    let bestScore = Infinity;
+    letterCells.forEach((cell) => {
+      const r = cell.getBoundingClientRect();
+      // 先比行（纵向差距权重高），同一行内再比横向距离
+      const dy = y < r.top ? r.top - y : (y > r.bottom ? y - r.bottom : 0);
+      const dx = x < r.left ? r.left - x : (x > r.right ? x - r.right : 0);
+      const score = dy * 1000 + dx;
+      if (score < bestScore) { bestScore = score; best = { cell, r }; }
+    });
+    const li = Number(best.cell.dataset.li);
+    return x > best.r.left + best.r.width / 2 ? li + 1 : li;
   }
+
+  function setCaretAtLetter(from, to) {
+    const val = el.answerInput.value;
+    const start = rawPosOfLetter(val, from);
+    const end = (to == null || to === from) ? start : rawPosAfterLetter(val, to);
+    el.answerInput.setSelectionRange(start, end);
+    paintCaret();
+  }
+
+  let dragAnchor = null;
+
   el.trackShell.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    focusInput();
-    paintTrack(model);
+    e.preventDefault(); // 阻止输入框自己的定位，改由轨道坐标决定
+    el.answerInput.focus({ preventScroll: true });
+    dragAnchor = letterIndexAtPoint(e.clientX, e.clientY);
+    setCaretAtLetter(dragAnchor);
+    el.trackShell.setPointerCapture(e.pointerId);
   });
-  el.answerInput.addEventListener('focus', () => paintTrack(model));
-  el.answerInput.addEventListener('blur', () => paintTrack(model));
+
+  el.trackShell.addEventListener('pointermove', (e) => {
+    if (dragAnchor == null) return;
+    const now = letterIndexAtPoint(e.clientX, e.clientY);
+    setCaretAtLetter(Math.min(dragAnchor, now), Math.max(dragAnchor, now));
+  });
+
+  const endDrag = (e) => {
+    if (dragAnchor == null) return;
+    dragAnchor = null;
+    if (e.pointerId != null && el.trackShell.hasPointerCapture(e.pointerId)) {
+      el.trackShell.releasePointerCapture(e.pointerId);
+    }
+  };
+  el.trackShell.addEventListener('pointerup', endDrag);
+  el.trackShell.addEventListener('pointercancel', endDrag);
+
+  // 双击选中整个词，方便整词重打
+  el.trackShell.addEventListener('dblclick', (e) => {
+    const li = letterIndexAtPoint(e.clientX, e.clientY);
+    const range = wordRanges.find((w) => li >= w.from && li < w.to) || wordRanges.find((w) => li === w.to);
+    if (range) setCaretAtLetter(range.from, range.to);
+  });
+
+  // 方向键、Home/End 等改变光标时轨道要跟着走。
+  // selectionchange 在各浏览器上对 input 的支持不一致，所以再用 keyup / select 兜底。
+  document.addEventListener('selectionchange', () => {
+    if (document.activeElement === el.answerInput) paintCaret();
+  });
+  ['keyup', 'select', 'mouseup', 'focus', 'blur'].forEach((evt) => {
+    el.answerInput.addEventListener(evt, paintCaret);
+  });
 
   el.listenBtn.addEventListener('click', () => {
     if (!localFileUrl) {

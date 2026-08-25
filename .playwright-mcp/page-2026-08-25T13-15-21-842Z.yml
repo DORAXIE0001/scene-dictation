@@ -1,0 +1,90 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e5]: SCENE DICTATION
+      - generic [ref=e6]: 剧情听写
+    - button "声音：开" [pressed] [ref=e7] [cursor=pointer]
+  - main [ref=e8]:
+    - complementary [ref=e9]:
+      - generic [ref=e10]:
+        - heading "课程" [level=2] [ref=e11]
+        - combobox "选择课程" [ref=e12]:
+          - option "清晨的厨房" [selected]
+          - option "我的本地片段（本地视频）"
+          - option "S1E1 开场（本地视频）"
+      - generic [ref=e13]:
+        - heading "场景" [level=2] [ref=e14]
+        - heading "清晨的厨房" [level=1] [ref=e15]
+        - paragraph [ref=e16]: 原创迷你剧《枫叶街》· 第 1 幕（模拟内容）
+        - paragraph [ref=e17]: 周一早晨，Grace 一边收拾厨房一边催促儿子 Tom 出门上学，两人手忙脚乱。
+        - heading "人物" [level=3] [ref=e18]
+        - list [ref=e19]:
+          - listitem [ref=e20]: Grace — 母亲，语速快，做事利落
+          - listitem [ref=e21]: Tom — 儿子，还没睡醒，慢吞吞
+        - heading "语气" [level=3] [ref=e22]
+        - paragraph [ref=e23]: 轻快、日常、略带催促
+        - heading "剧情提示" [level=3] [ref=e24]
+        - paragraph [ref=e25]: 注意时间压力：所有台词都围绕「快迟到了」展开。
+      - generic [ref=e26]:
+        - heading "今日学习" [level=2] [ref=e27]
+        - generic [ref=e28]:
+          - generic [ref=e29]:
+            - term [ref=e30]: 完成句子
+            - definition [ref=e31]: "0"
+          - generic [ref=e32]:
+            - term [ref=e33]: 完成单词
+            - definition [ref=e34]: "0"
+          - generic [ref=e35]:
+            - term [ref=e36]: 检查次数
+            - definition [ref=e37]: "0"
+          - generic [ref=e38]:
+            - term [ref=e39]: 播放原句
+            - definition [ref=e40]: "0"
+          - generic [ref=e41]:
+            - term [ref=e42]: 跟读录音
+            - definition [ref=e43]: "0"
+          - generic [ref=e44]:
+            - term [ref=e45]: 学习时长
+            - definition [ref=e46]: 0 分钟
+        - generic [ref=e47]:
+          - generic [ref=e48]: 连续学习
+          - generic [ref=e49]:
+            - emphasis [ref=e50]: "0"
+            - text: 天
+        - heading "最近 7 天有效操作" [level=3] [ref=e51]
+        - img "最近 7 天每日有效操作柱状图" [ref=e52]:
+          - generic "8/19：0 次有效操作" [ref=e53]: 8/19
+          - generic "8/20：0 次有效操作" [ref=e56]: 8/20
+          - generic "8/21：0 次有效操作" [ref=e59]: 8/21
+          - generic "8/22：0 次有效操作" [ref=e62]: 8/22
+          - generic "8/23：0 次有效操作" [ref=e65]: 8/23
+          - generic "8/24：0 次有效操作" [ref=e68]: 8/24
+          - generic "8/25：0 次有效操作" [ref=e71]: 8/25
+    - generic [ref=e74]:
+      - img "清晨厨房的插画：窗外天刚亮，桌上放着早餐" [ref=e76]
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - generic [ref=e79]: Grace
+          - generic [ref=e80]: 第 1 / 5 句
+        - paragraph [ref=e81]: 我们得在八点前出门。
+        - generic [ref=e82]:
+          - generic [ref=e83]: .
+          - generic: 点这里，直接在横线上打字
+          - generic [ref=e115]: 输入英文台词
+          - textbox "输入英文台词" [ref=e116]
+        - paragraph [ref=e117]
+        - generic [ref=e118]:
+          - button "检查答案" [ref=e119] [cursor=pointer]
+          - button "显示提示" [ref=e120] [cursor=pointer]
+          - button "播放原句" [disabled] [ref=e121]
+          - button "开始跟读" [disabled] [ref=e122]
+        - paragraph [ref=e123]: 回车 检查答案 · 答对后 回车 下一句 · Shift+回车 听本句
+        - navigation "句子导航" [ref=e124]:
+          - button "上一句" [disabled] [ref=e125]
+          - generic [ref=e126]:
+            - button "第 1 句" [ref=e127] [cursor=pointer]
+            - button "第 2 句" [ref=e128] [cursor=pointer]
+            - button "第 3 句" [ref=e129] [cursor=pointer]
+            - button "第 4 句" [ref=e130] [cursor=pointer]
+            - button "第 5 句" [ref=e131] [cursor=pointer]
+          - button "下一句" [ref=e132] [cursor=pointer]
