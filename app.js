@@ -9,6 +9,7 @@
   const KEY_LOCAL_FILE_NAME = 'sd-local-file-name';
   const KEY_SRT_PREFIX = 'sd-srt-'; // 每课一份导入的字幕，存本机浏览器
   const KEY_SUB_MASK = 'sd-sub-mask'; // 遮挡视频内嵌硬字幕的黑条开关
+  const KEY_LAST_SPOT = 'sd-last-spot'; // 上次停留的课程与句子
   const STATS_KEEP_DAYS = 90;
   // 有效学习时长口径：页面可见 + 最近 90 秒内有操作时，每 15 秒累计一次
   const ACTIVE_WINDOW_MS = 90 * 1000;
@@ -744,8 +745,34 @@
 
     renderDots();
     seekToLine();
+    saveSpot();
     // 换句后光标留在轨道上，接着打字即可，不用再点一次
     if (document.activeElement === el.answerInput) paintTrack(model);
+  }
+
+  // 记下当前停留的位置，下次打开直接回到这里。
+  // 存句子 id 而不是只存序号：重新导入字幕后序号可能整体挪位，id 更可靠。
+  function saveSpot() {
+    const line = currentLines()[lineIndex];
+    saveJSON(KEY_LAST_SPOT, {
+      lessonId: currentLesson().id,
+      lineId: line ? line.id : null,
+      lineIndex,
+    });
+  }
+
+  function restoreSpot() {
+    const spot = loadJSON(KEY_LAST_SPOT, null);
+    if (!spot) return false;
+    const li = LESSONS.findIndex((l) => l.id === spot.lessonId);
+    if (li < 0) return false;
+    lessonIndex = li;
+    el.lessonSelect.value = String(li);
+    const lines = currentLines();
+    let idx = spot.lineId ? lines.findIndex((l) => l.id === spot.lineId) : -1;
+    if (idx < 0 && typeof spot.lineIndex === 'number') idx = spot.lineIndex;
+    lineIndex = Math.min(Math.max(0, idx), lines.length - 1);
+    return true;
   }
 
   function renderDots() {
@@ -1074,7 +1101,13 @@
     });
     setSoundUI();
     renderStats();
+    const resumed = restoreSpot();
     renderLesson();
+    if (resumed && lineIndex > 0) {
+      const line = currentLines()[lineIndex];
+      setFeedback('接着上次停下的地方继续：第 ' + (lineIndex + 1) + ' 句。'
+        + (lineDone(line) ? '这句已经完成过了。' : ''), 'ok');
+    }
     // 部分浏览器的语音列表是异步加载的，先触发一次加载
     if ('speechSynthesis' in window) speechSynthesis.getVoices();
   }
