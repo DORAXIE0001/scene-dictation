@@ -1,13 +1,16 @@
-/* Swiss editorial 风格：白底、黑字、单一红色强调、1px 分隔线、无圆角无阴影 */
+/* Swiss editorial 风格（暗色）：近黑底、浅字、单一红色强调、1px 分隔线、无圆角无阴影 */
 
 :root {
-  --ink: #111111;
-  --ink-soft: #555555;
-  --line: #e2e2e4;
-  --line-strong: #111111;
-  --bg: #ffffff;
-  --bg-alt: #f7f7f8;
-  --red: #e4002b;
+  /* 暗色底：视频不再是白底上的一块亮斑，眼睛不用在明暗之间反复适应 */
+  --ink: #e9e9ec;
+  --ink-soft: #92929c;
+  --line: #2a2a31;
+  --line-strong: #43434e;
+  --bg: #17171b;      /* 面板：左栏、听写框、工具条 */
+  --bg-alt: #0b0b0e;  /* 版面底：右栏，视频四周最暗 */
+  --red: #ff3355;     /* 比印刷用的 #e4002b 提亮，暗底上才不发闷 */
+  --screen: #08080a;  /* 画面区，接近纯黑的信箱底 */
+  color-scheme: dark; /* 让原生下拉框、数字输入框、滚动条一并转暗 */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -91,7 +94,7 @@ body {
 .lesson-select {
   width: 100%; padding: 8px 10px;
   font: inherit; color: var(--ink);
-  background: var(--bg); border: 1px solid var(--ink);
+  background: var(--bg); border: 1px solid var(--line-strong);
   border-radius: 0;
 }
 
@@ -125,7 +128,7 @@ body {
 .week-chart {
   display: flex; align-items: flex-end; gap: 6px;
   height: 72px; margin-top: 6px;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line-strong);
   padding-bottom: 0;
 }
 
@@ -147,15 +150,15 @@ body {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: #0d0d0f;
-  border: 1px solid var(--line-strong);
+  background: var(--screen);
+  border: 1px solid var(--line);
 }
 
 /* 遮挡视频内嵌硬字幕的黑条（防止答案直接印在画面上） */
 .sub-mask {
   position: absolute; left: 0; right: 0; bottom: 0;
   height: 17%;
-  background: #0d0d0f;
+  background: var(--screen);
   pointer-events: none; /* 不挡播放器控制条的点击 */
 }
 
@@ -179,22 +182,22 @@ body {
   font: inherit; font-size: 13px; letter-spacing: 0.04em;
   padding: 8px 16px;
   background: var(--bg); color: var(--ink);
-  border: 1px solid var(--ink); border-radius: 0;
+  border: 1px solid var(--line-strong); border-radius: 0;
   cursor: pointer;
 }
 
 .btn:hover:not(:disabled) { background: var(--ink); color: var(--bg); }
 
-.btn:disabled { color: #b5b5b8; border-color: #d4d4d6; cursor: not-allowed; background: var(--bg); }
+.btn:disabled { color: #5a5a64; border-color: #2e2e36; cursor: not-allowed; background: var(--bg); }
 
-.btn-primary { background: var(--red); border-color: var(--red); color: #fff; }
-.btn-primary:hover:not(:disabled) { background: #b80022; border-color: #b80022; color: #fff; }
+.btn-primary { background: var(--red); border-color: var(--red); color: #17171b; }
+.btn-primary:hover:not(:disabled) { background: #ff5570; border-color: #ff5570; color: #17171b; }
 
 .btn-ghost { border-color: var(--line); }
 
 /* 听本句：黑实底，视觉上是练习的起点动作 */
-.btn-dark { background: var(--ink); border-color: var(--ink); color: #fff; }
-.btn-dark:hover:not(:disabled) { background: #333; border-color: #333; color: #fff; }
+.btn-dark { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.btn-dark:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; color: var(--bg); }
 
 .file-btn { display: inline-flex; align-items: center; }
 
@@ -256,7 +259,7 @@ body {
 
 .track-placeholder {
   position: absolute; right: 14px; bottom: 8px;
-  font-size: 12px; color: #b5b5b8;
+  font-size: 12px; color: #6e6e78;
   pointer-events: none;
 }
 
@@ -275,13 +278,13 @@ body {
   width: 22px; height: 30px;
   display: inline-flex; align-items: flex-start; justify-content: center;
   font-size: 18px; font-weight: 500;
-  border-bottom: 2px solid #c9c9cc;
+  border-bottom: 2px solid #3c3c45;
   color: transparent;
 }
 
 .track-cell.correct { color: var(--ink); border-bottom-color: var(--ink); }
 .track-cell.wrong { color: var(--red); border-bottom-color: var(--red); }
-.track-cell.punct { color: #b5b5b8; border-bottom-color: transparent; width: 12px; }
+.track-cell.punct { color: #6e6e78; border-bottom-color: transparent; width: 12px; }
 
 /* 超出原句的多余字母：整组标红，和正文格子拉开距离 */
 .track-extra { margin-left: 6px; border-left: 2px solid var(--red); padding-left: 8px; }
@@ -299,8 +302,8 @@ body {
 .track-cell.caret-end::after { right: 1px; }
 
 /* 选中的字母 */
-.track-cell.sel { background: #ffd9e0; }
-.track-cell.sel.wrong { background: #ffc2ce; }
+.track-cell.sel { background: rgba(255, 51, 85, 0.26); }
+.track-cell.sel.wrong { background: rgba(255, 51, 85, 0.45); }
 
 @keyframes caret-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
@@ -355,7 +358,7 @@ body {
 
 .line-dot {
   width: 10px; height: 10px;
-  background: var(--bg); border: 1px solid var(--ink);
+  background: var(--bg); border: 1px solid var(--line-strong);
   padding: 0; cursor: pointer;
 }
 
@@ -368,7 +371,7 @@ body {
 .line-jump-input {
   width: 72px; padding: 7px 8px;
   font: inherit; font-size: 13px;
-  border: 1px solid var(--ink); border-radius: 0;
+  border: 1px solid var(--line-strong); border-radius: 0;
   background: var(--bg); color: var(--ink);
 }
 
