@@ -27,3 +27,6 @@ models/
 *.ass
 *.vtt
 *.baiduyun.*
+
+# Playwright MCP 的测试快照输出，不入库
+.playwright-mcp/
