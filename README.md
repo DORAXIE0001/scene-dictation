@@ -89,9 +89,11 @@ tools/transcribe.sh 1/S01E01.mp4
 
 | 文件 | 作用 |
 |---|---|
-| `index.html` | 页面结构（桌面两列布局） |
-| `styles.css` | Swiss editorial 风格样式 |
-| `app.js` | 全部页面逻辑（听写判定、声音、录音、统计） |
+| `index.html` | 页面结构（桌面三栏布局：语境 / 画面+听写 / 语言解析） |
+| `styles.css` | Swiss editorial 风格样式（暗色） |
+| `app.js` | 页面逻辑（听写判定、声音、录音、统计、字幕导入） |
+| `explain.js` | 语言解析面板（Claude 直连 / 复制提问、本地缓存） |
 | `content.js` | 内置课程数据（可公开） |
 | `content.local.js` | 个人课程模板（填入真实台词后勿提交） |
 | `assets/kitchen.svg` | 原创场景插画 |
+| `tools/transcribe.sh` | 本地 Whisper 转写脚本（视频 → .srt） |
