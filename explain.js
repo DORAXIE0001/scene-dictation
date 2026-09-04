@@ -12,6 +12,8 @@
   const KEY_API = 'sd-anthropic-key';
   const KEY_MODEL = 'sd-explain-model';
   const KEY_CACHE = 'sd-explain-cache-v1';
+  const KEY_ENGINE = 'sd-explain-engine';        // 桥接用哪个 CLI
+  const KEY_ENGINE_MODEL = 'sd-explain-engine-model';
   const CACHE_MAX = 200; // 解析结果按句缓存，超量按最早使用时间淘汰
 
   const BRIDGE_URL = 'http://127.0.0.1:8790';  // 本地桥接，走 Claude 订阅
@@ -38,6 +40,7 @@
   };
 
   let bridgeUp = false; // 本地桥接是否在线（在线就优先用它，不花 API 的钱）
+  let engines = [];     // 桥接报上来的可用引擎
   let ctx = null;       // 当前句的上下文，由 app.js 通过 setLine 传入
   let running = false;  // 正在请求中，避免重复点击重复计费
   let abort = null;
@@ -45,6 +48,8 @@
   // ---------- 存储 ----------
   const getKey = () => localStorage.getItem(KEY_API) || '';
   const getModel = () => localStorage.getItem(KEY_MODEL) || MODELS[0].id;
+  const getEngine = () => localStorage.getItem(KEY_ENGINE) || '';
+  const getEngineModel = () => localStorage.getItem(KEY_ENGINE_MODEL) || '';
 
   function loadCache() {
     try { return JSON.parse(localStorage.getItem(KEY_CACHE)) || {}; } catch (e) { return {}; }
@@ -153,13 +158,50 @@
   // 桥接脚本替网页调 `claude -p`，用的就是订阅额度。
   async function probeBridge() {
     try {
-      const res = await fetch(BRIDGE_URL + '/health', { signal: AbortSignal.timeout(1200) });
-      bridgeUp = res.ok;
+      const res = await fetch(BRIDGE_URL + '/health', { signal: AbortSignal.timeout(1500) });
+      const info = res.ok ? await res.json() : null;
+      bridgeUp = !!(info && info.engines && info.engines.length);
+      engines = bridgeUp ? info.engines : [];
+      if (bridgeUp && !engines.some((e) => e.id === getEngine())) {
+        localStorage.setItem(KEY_ENGINE, info.default || engines[0].id);
+      }
     } catch (e) {
       bridgeUp = false;
+      engines = [];
     }
+    renderEngineOptions();
     renderSource();
     return bridgeUp;
+  }
+
+  // 桥接在线时，模型下拉框换成"引擎 · 模型"，直接选用哪家的额度
+  function renderEngineOptions() {
+    if (!bridgeUp) { renderApiModels(); return; }
+    const current = getEngine() + '|' + getEngineModel();
+    el.model.innerHTML = '';
+    engines.forEach((eng) => {
+      const group = document.createElement('optgroup');
+      group.label = eng.label;
+      (eng.models.length ? eng.models : ['']).forEach((m) => {
+        const opt = document.createElement('option');
+        opt.value = eng.id + '|' + m;
+        opt.textContent = m || '默认模型';
+        group.appendChild(opt);
+      });
+      el.model.appendChild(group);
+    });
+    if ([...el.model.options].some((o) => o.value === current)) el.model.value = current;
+  }
+
+  function renderApiModels() {
+    el.model.innerHTML = '';
+    MODELS.forEach((m) => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.label;
+      el.model.appendChild(opt);
+    });
+    el.model.value = getModel();
   }
 
   async function callBridge(c) {
@@ -168,7 +210,7 @@
       method: 'POST',
       signal: abort.signal,
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ prompt: buildPrompt(c), model: CLI_ALIAS[getModel()] || '' }),
+      body: JSON.stringify({ prompt: buildPrompt(c), engine: getEngine(), model: getEngineModel() }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || ('桥接返回 ' + res.status));
@@ -274,7 +316,7 @@
       const c2 = loadCache();
       c2[ctx.lineId] = { md, at: Date.now() };
       saveCache(c2);
-      setStatus('解析完成（' + (bridgeUp ? '走订阅' : 'API') + '）。同一句再看不会重复请求。', 'ok');
+      setStatus('解析完成（' + (bridgeUp ? getEngine() : 'API') + '）。同一句再看不会重复请求。', 'ok');
     } catch (err) {
       if (err.name === 'AbortError') { setStatus('已取消。', ''); }
       else { setStatus(err.message, 'err'); }
@@ -307,7 +349,8 @@
   function renderSource() {
     if (!el.source) return;
     if (bridgeUp) {
-      el.source.textContent = '当前走本地桥接（Claude 订阅，不额外计费）';
+      const eng = engines.find((e) => e.id === getEngine()) || engines[0];
+      el.source.textContent = '当前走本地桥接：' + (eng ? eng.label : getEngine()) + '，不消耗 API 额度';
       el.source.className = 'explain-source ok';
     } else if (getKey()) {
       el.source.textContent = '当前走 API Key（按 token 计费）';
@@ -334,7 +377,13 @@
   el.saveBtn.addEventListener('click', () => {
     const k = el.key.value.trim();
     if (k) localStorage.setItem(KEY_API, k); else localStorage.removeItem(KEY_API);
-    localStorage.setItem(KEY_MODEL, el.model.value);
+    if (bridgeUp && el.model.value.includes('|')) {
+      const [eng, m] = el.model.value.split('|');
+      localStorage.setItem(KEY_ENGINE, eng);
+      localStorage.setItem(KEY_ENGINE_MODEL, m);
+    } else {
+      localStorage.setItem(KEY_MODEL, el.model.value);
+    }
     renderSource();
     setStatus(k ? '已保存，可以点「解析这一句」了。' : '已清空 Key。', 'ok');
     el.settings.open = false;
@@ -347,13 +396,7 @@
   });
 
   // ---------- 启动 ----------
-  MODELS.forEach((m) => {
-    const opt = document.createElement('option');
-    opt.value = m.id;
-    opt.textContent = m.label;
-    el.model.appendChild(opt);
-  });
-  el.model.value = getModel();
+  renderApiModels();
   el.key.value = getKey();
   el.btn.disabled = true;
   el.copyBtn.disabled = true;

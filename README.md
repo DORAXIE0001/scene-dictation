@@ -67,18 +67,23 @@ tools/transcribe.sh 1/S01E01.mp4
 
 三种用法，按优先级自动选择，都不需要后端：
 
-1. **本地桥接（推荐，走 Claude 订阅，不额外花钱）**
+1. **本地桥接（推荐，借本机已装的 AI 命令行工具，不额外花钱）**
 
    ```bash
-   python3 tools/explain-bridge.py     # 监听 127.0.0.1:8790
+   python3 tools/explain-bridge.py --list   # 先看本机装了哪些、能不能用
+   python3 tools/explain-bridge.py          # 启动，自动挑一个可用的
+   python3 tools/explain-bridge.py --engine codex   # 或指定引擎
    ```
 
-   浏览器读不到 macOS 钥匙串里的 OAuth 登录态，但本地进程可以。桥接替网页调
-   `claude -p`，用的是你订阅里已付过的额度。页面会自动探测并切过去，顶部显示
-   「当前走本地桥接」。前置条件：终端 `claude -p "hi"` 能正常返回。
+   支持 `claude`（订阅额度）、`codex`（ChatGPT 额度）、`gemini`。浏览器读不到这些
+   工具的登录态，但本地进程可以；桥接替网页调它们的无头模式，用的是你已经付过的额度。
+   页面自动探测，模型下拉框会变成「引擎 · 模型」，顶部显示当前走哪个。
 
-   安全边界：只绑 `127.0.0.1`；只接受听写页面的 Origin（防止你打开的其他网站
-   偷用订阅额度）；只执行 `claude -p`，不跑网页传来的任何其他命令。
+   `--list` 会真跑一句极短的提问来验证——**装了不等于能用**，没登录或没配 key 都会
+   在这里直接暴露出来，不必等到解析时才发现。
+
+   安全边界：只绑 `127.0.0.1`；只接受听写页面的 Origin（防止你打开的其他网站偷用
+   你的额度）；命令模板写死在脚本里，网页只能选引擎和模型，改不了要执行的命令。
 
 2. **Anthropic API Key** —— 没有桥接时的备选。浏览器直连 `api.anthropic.com`
    （带 `anthropic-dangerous-direct-browser-access` 头），流式返回、就地渲染。
