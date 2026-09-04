@@ -65,11 +65,28 @@ tools/transcribe.sh 1/S01E01.mp4
 
 听写解决「拼不拼得对」，解析解决「为什么这么说」。每句可按需生成：翻译、词汇与短语、语法、语境与言外之意、地道用法。
 
-两种用法，都不需要后端：
+三种用法，按优先级自动选择，都不需要后端：
 
-1. **填自己的 Anthropic API Key** —— 浏览器直连 `api.anthropic.com`（带 `anthropic-dangerous-direct-browser-access` 头），流式返回、就地渲染。
-   Key 只写进这台电脑的 `localStorage`，只发往 Anthropic，不进代码仓库。**公用电脑请不要填。**
-2. **不填 Key** —— 点「复制提问」，把台词、前后文和提问模板整理成一段话，粘到任意 AI 里。
+1. **本地桥接（推荐，走 Claude 订阅，不额外花钱）**
+
+   ```bash
+   python3 tools/explain-bridge.py     # 监听 127.0.0.1:8790
+   ```
+
+   浏览器读不到 macOS 钥匙串里的 OAuth 登录态，但本地进程可以。桥接替网页调
+   `claude -p`，用的是你订阅里已付过的额度。页面会自动探测并切过去，顶部显示
+   「当前走本地桥接」。前置条件：终端 `claude -p "hi"` 能正常返回。
+
+   安全边界：只绑 `127.0.0.1`；只接受听写页面的 Origin（防止你打开的其他网站
+   偷用订阅额度）；只执行 `claude -p`，不跑网页传来的任何其他命令。
+
+2. **Anthropic API Key** —— 没有桥接时的备选。浏览器直连 `api.anthropic.com`
+   （带 `anthropic-dangerous-direct-browser-access` 头），流式返回、就地渲染。
+   Key 只写进这台电脑的 `localStorage`，不进代码仓库。**公用电脑请不要填。**
+   注意：Claude 订阅与 API 是两套独立计费，订阅不能抵 API 的费用。
+
+3. **不填也不开桥接** —— 点「复制提问」，把台词、前后文和提问模板整理成一段话，
+   粘到任意 AI 里（包括你终端的 Claude Code）。
 
 其他细节：
 
@@ -97,3 +114,4 @@ tools/transcribe.sh 1/S01E01.mp4
 | `content.local.js` | 个人课程模板（填入真实台词后勿提交） |
 | `assets/kitchen.svg` | 原创场景插画 |
 | `tools/transcribe.sh` | 本地 Whisper 转写脚本（视频 → .srt） |
+| `tools/explain-bridge.py` | 解析桥接：让网页走 Claude 订阅，免 API key |

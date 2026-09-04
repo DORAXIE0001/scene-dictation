@@ -14,6 +14,7 @@
   const KEY_CACHE = 'sd-explain-cache-v1';
   const CACHE_MAX = 200; // 解析结果按句缓存，超量按最早使用时间淘汰
 
+  const BRIDGE_URL = 'http://127.0.0.1:8790';  // 本地桥接，走 Claude 订阅
   const API_URL = 'https://api.anthropic.com/v1/messages';
   const API_VERSION = '2023-06-01';
 
@@ -24,6 +25,8 @@
   ];
   // effort 只有 Opus / Sonnet 家族支持，Haiku 4.5 传了会 400
   const SUPPORTS_EFFORT = new Set(['claude-opus-5', 'claude-sonnet-5']);
+  // 桥接走 claude CLI，模型用短别名
+  const CLI_ALIAS = { 'claude-opus-5': 'opus', 'claude-sonnet-5': 'sonnet', 'claude-haiku-4-5': 'haiku' };
 
   const $ = (id) => document.getElementById(id);
   const el = {
@@ -31,8 +34,10 @@
     body: $('explainBody'), settings: $('explainSettings'),
     key: $('explainKey'), model: $('explainModel'),
     saveBtn: $('explainSaveBtn'), clearBtn: $('explainClearCacheBtn'),
+    source: $('explainSource'),
   };
 
+  let bridgeUp = false; // 本地桥接是否在线（在线就优先用它，不花 API 的钱）
   let ctx = null;       // 当前句的上下文，由 app.js 通过 setLine 传入
   let running = false;  // 正在请求中，避免重复点击重复计费
   let abort = null;
@@ -143,6 +148,33 @@
     ].join('\n');
   }
 
+  // ---------- 走本地桥接（Claude 订阅） ----------
+  // 浏览器读不到钥匙串里的 OAuth 登录态，但本地进程可以；
+  // 桥接脚本替网页调 `claude -p`，用的就是订阅额度。
+  async function probeBridge() {
+    try {
+      const res = await fetch(BRIDGE_URL + '/health', { signal: AbortSignal.timeout(1200) });
+      bridgeUp = res.ok;
+    } catch (e) {
+      bridgeUp = false;
+    }
+    renderSource();
+    return bridgeUp;
+  }
+
+  async function callBridge(c) {
+    abort = new AbortController();
+    const res = await fetch(BRIDGE_URL + '/explain', {
+      method: 'POST',
+      signal: abort.signal,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ prompt: buildPrompt(c), model: CLI_ALIAS[getModel()] || '' }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ('桥接返回 ' + res.status));
+    return data.text || '';
+  }
+
   // ---------- 调用 API ----------
   async function callClaude(c, onDelta) {
     const model = getModel();
@@ -220,26 +252,34 @@
       setStatus('这句之前解析过，直接读的本地缓存。', 'ok');
       return;
     }
-    if (!getKey()) {
-      setStatus('还没填 API Key。可以点「复制提问」把问题粘到任意 AI 里，或在下方设置里填 Key。', 'err');
+    // 桥接优先：走订阅不额外花钱；没桥接才退回 API key
+    if (!bridgeUp) await probeBridge();
+    if (!bridgeUp && !getKey()) {
+      setStatus('本地桥接没启动，也没填 API Key。可先点「复制提问」，或看下方设置里的两种办法。', 'err');
       el.settings.open = true;
       return;
     }
     running = true;
     el.btn.disabled = true;
     el.btn.textContent = '解析中…';
-    setStatus('正在请求 ' + getModel() + '…', '');
     el.body.innerHTML = '';
+    const started = Date.now();
+    const tick = setInterval(() => {
+      if (running) setStatus('解析中… 已等待 ' + Math.round((Date.now() - started) / 1000) + ' 秒', '');
+    }, 1000);
+    setStatus('解析中…', '');
     try {
-      const md = await callClaude(ctx, render);
+      const md = bridgeUp ? await callBridge(ctx) : await callClaude(ctx, render);
+      if (bridgeUp) render(md);
       const c2 = loadCache();
       c2[ctx.lineId] = { md, at: Date.now() };
       saveCache(c2);
-      setStatus('解析完成。同一句再看不会重复请求。', 'ok');
+      setStatus('解析完成（' + (bridgeUp ? '走订阅' : 'API') + '）。同一句再看不会重复请求。', 'ok');
     } catch (err) {
       if (err.name === 'AbortError') { setStatus('已取消。', ''); }
       else { setStatus(err.message, 'err'); }
     } finally {
+      clearInterval(tick);
       running = false;
       el.btn.disabled = false;
       el.btn.textContent = '解析这一句';
@@ -263,6 +303,21 @@
     el.copyBtn.disabled = !ctx;
   }
 
+  // 让人一眼看到解析走的是哪条路、要不要花钱
+  function renderSource() {
+    if (!el.source) return;
+    if (bridgeUp) {
+      el.source.textContent = '当前走本地桥接（Claude 订阅，不额外计费）';
+      el.source.className = 'explain-source ok';
+    } else if (getKey()) {
+      el.source.textContent = '当前走 API Key（按 token 计费）';
+      el.source.className = 'explain-source';
+    } else {
+      el.source.textContent = '未连接：可启动本地桥接走订阅，或填 API Key';
+      el.source.className = 'explain-source warn';
+    }
+  }
+
   // ---------- 事件 ----------
   el.btn.addEventListener('click', () => explain(false));
 
@@ -280,7 +335,8 @@
     const k = el.key.value.trim();
     if (k) localStorage.setItem(KEY_API, k); else localStorage.removeItem(KEY_API);
     localStorage.setItem(KEY_MODEL, el.model.value);
-    setStatus(k ? '已保存，可以点「解析这一句」了。' : '已清空 Key，之后用「复制提问」。', 'ok');
+    renderSource();
+    setStatus(k ? '已保存，可以点「解析这一句」了。' : '已清空 Key。', 'ok');
     el.settings.open = false;
   });
 
@@ -301,6 +357,8 @@
   el.key.value = getKey();
   el.btn.disabled = true;
   el.copyBtn.disabled = true;
+  renderSource();
+  probeBridge();
 
   window.SceneExplain = { setLine };
 })();

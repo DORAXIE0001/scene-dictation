@@ -135,6 +135,7 @@
       <section class="panel">
         <h2 class="panel-label">语言解析</h2>
         <p class="explain-intro">听写解决「拼不拼得对」，解析解决「为什么这么说」。</p>
+        <p id="explainSource" class="explain-source"></p>
 
         <div class="explain-actions">
           <button id="explainBtn" class="btn btn-dark" type="button">解析这一句</button>
@@ -150,6 +151,8 @@
           <input id="explainKey" class="field-input" type="password" autocomplete="off"
                  spellcheck="false" placeholder="sk-ant-...">
           <p class="field-note">只存在这台电脑的浏览器里，只发往 api.anthropic.com，不会进入代码仓库。公用电脑请不要填。</p>
+          <p class="field-note">想不花 API 的钱，就用本地桥接走 Claude 订阅：终端跑
+            <code>python3 tools/explain-bridge.py</code>，页面会自动切过去。</p>
           <label class="field-label" for="explainModel">模型</label>
           <select id="explainModel" class="field-input"></select>
           <p class="field-note">没有填 Key 也能用「复制提问」，把整理好的问题粘到任意 AI 里。</p>
