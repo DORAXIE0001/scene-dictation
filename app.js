@@ -746,6 +746,7 @@
     renderDots();
     seekToLine();
     saveSpot();
+    pushExplainContext();
     // 换句后光标留在轨道上，接着打字即可，不用再点一次
     if (document.activeElement === el.answerInput) paintTrack(model);
   }
@@ -773,6 +774,24 @@
     if (idx < 0 && typeof spot.lineIndex === 'number') idx = spot.lineIndex;
     lineIndex = Math.min(Math.max(0, idx), lines.length - 1);
     return true;
+  }
+
+
+  // 把当前句连同前后文交给解析面板；前后各带几句，讲语境时才有依据
+  function pushExplainContext() {
+    if (!window.SceneExplain) return;
+    const lines = currentLines();
+    const line = lines[lineIndex];
+    if (!line) { window.SceneExplain.setLine(null); return; }
+    window.SceneExplain.setLine({
+      lineId: line.id,
+      en: line.en,
+      zh: line.zh || '',
+      prevLines: lines.slice(Math.max(0, lineIndex - 2), lineIndex).map((l) => l.en),
+      nextLine: lines[lineIndex + 1] ? lines[lineIndex + 1].en : '',
+      lessonTitle: currentLesson().title,
+      solved: lineDone(line),
+    });
   }
 
   function renderDots() {

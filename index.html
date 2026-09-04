@@ -129,10 +129,42 @@
         </nav>
       </div>
     </section>
+
+    <!-- 右列：语言解析 -->
+    <aside class="col-explain">
+      <section class="panel">
+        <h2 class="panel-label">语言解析</h2>
+        <p class="explain-intro">听写解决「拼不拼得对」，解析解决「为什么这么说」。</p>
+
+        <div class="explain-actions">
+          <button id="explainBtn" class="btn btn-dark" type="button">解析这一句</button>
+          <button id="explainCopyBtn" class="btn" type="button">复制提问</button>
+        </div>
+        <p id="explainStatus" class="explain-status" aria-live="polite"></p>
+
+        <div id="explainBody" class="explain-body"></div>
+
+        <details id="explainSettings" class="explain-settings">
+          <summary>解析设置</summary>
+          <label class="field-label" for="explainKey">Anthropic API Key</label>
+          <input id="explainKey" class="field-input" type="password" autocomplete="off"
+                 spellcheck="false" placeholder="sk-ant-...">
+          <p class="field-note">只存在这台电脑的浏览器里，只发往 api.anthropic.com，不会进入代码仓库。公用电脑请不要填。</p>
+          <label class="field-label" for="explainModel">模型</label>
+          <select id="explainModel" class="field-input"></select>
+          <p class="field-note">没有填 Key 也能用「复制提问」，把整理好的问题粘到任意 AI 里。</p>
+          <div class="explain-settings-actions">
+            <button id="explainSaveBtn" class="btn" type="button">保存</button>
+            <button id="explainClearCacheBtn" class="btn" type="button">清空解析缓存</button>
+          </div>
+        </details>
+      </section>
+    </aside>
   </main>
 
   <script src="content.js"></script>
   <script src="content.local.js"></script>
+  <script src="explain.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
