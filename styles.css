@@ -1,16 +1,18 @@
-/* Swiss editorial 风格（暗色）：近黑底、浅字、单一红色强调、1px 分隔线、无圆角无阴影 */
+/* 深空风格：冷蓝紫星空底 + 半透面板，保留 Swiss 的网格、1px 细线与单一红色强调 */
 
 :root {
-  /* 暗色底：视频不再是白底上的一块亮斑，眼睛不用在明暗之间反复适应 */
-  --ink: #e9e9ec;
-  --ink-soft: #92929c;
-  --line: #2a2a31;
-  --line-strong: #43434e;
-  --bg: #17171b;      /* 面板：左栏、听写框、工具条 */
-  --bg-alt: #0b0b0e;  /* 版面底：右栏，视频四周最暗 */
-  --red: #ff3355;     /* 比印刷用的 #e4002b 提亮，暗底上才不发闷 */
-  --screen: #08080a;  /* 画面区，接近纯黑的信箱底 */
-  color-scheme: dark; /* 让原生下拉框、数字输入框、滚动条一并转暗 */
+  /* 深空：冷蓝紫的底，面板半透让星云透出来一点，视频四周最暗最空 */
+  --ink: #e8eaf2;
+  --ink-soft: #949bb5;
+  --line: rgba(150, 165, 220, 0.16);
+  --line-strong: rgba(150, 165, 220, 0.30);
+  --bg: rgba(18, 20, 36, 0.86);      /* 面板：左栏、听写框、解析栏 */
+  --bg-solid: #141628;               /* 按钮、格子等小块，避免半透叠加发浑 */
+  --bg-alt: rgba(6, 8, 20, 0.62);    /* 版面底：右栏，星云在这里最明显 */
+  --screen: #03040a;                 /* 画面区，最接近纯黑 */
+  --red: #ff3b62;                    /* 强调色，在冷底上比正红更立得住 */
+  --glow: rgba(90, 120, 255, 0.10);  /* 画面与强调件的冷光晕 */
+  color-scheme: dark;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,9 +25,19 @@ html, body { height: 100%; }
 body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: var(--ink);
-  background: var(--bg);
   font-size: 15px;
   line-height: 1.55;
+  /* 星场铺在最上层，三团星云在下，最底是深空本色；
+     fixed 让背景不随内容滚动，视线才有"窗外是静止星空"的感觉 */
+  background-color: #05060e;
+  background-image:
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22900%22%20viewBox%3D%220%200%201200%20900%22%3E%3Ccircle%20cx%3D%22388.6%22%20cy%3D%22135.8%22%20r%3D%221.0%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.21%22%2F%3E%3Ccircle%20cx%3D%22113.0%22%20cy%3D%22524.5%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.32%22%2F%3E%3Ccircle%20cx%3D%22520.4%22%20cy%3D%2262.9%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.55%22%2F%3E%3Ccircle%20cx%3D%22992.2%22%20cy%3D%22111.4%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.6%22%2F%3E%3Ccircle%20cx%3D%22692.5%22%20cy%3D%22357.0%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.21%22%2F%3E%3Ccircle%20cx%3D%22347.5%22%20cy%3D%22129.8%22%20r%3D%220.5%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.56%22%2F%3E%3Ccircle%20cx%3D%22979.4%22%20cy%3D%22162.7%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.56%22%2F%3E%3Ccircle%20cx%3D%22446.9%22%20cy%3D%22493.0%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.56%22%2F%3E%3Ccircle%20cx%3D%22595.7%22%20cy%3D%22478.5%22%20r%3D%221.3%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.39%22%2F%3E%3Ccircle%20cx%3D%22433.9%22%20cy%3D%22223.6%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.65%22%2F%3E%3Ccircle%20cx%3D%2298.2%22%20cy%3D%22270.2%22%20r%3D%220.7%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.77%22%2F%3E%3Ccircle%20cx%3D%22345.5%22%20cy%3D%22882.2%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.52%22%2F%3E%3Ccircle%20cx%3D%22908.6%22%20cy%3D%22136.8%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.46%22%2F%3E%3Ccircle%20cx%3D%22917.5%22%20cy%3D%22515.7%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.39%22%2F%3E%3Ccircle%20cx%3D%22713.2%22%20cy%3D%22521.9%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.23%22%2F%3E%3Ccircle%20cx%3D%221133.6%22%20cy%3D%22426.7%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.22%22%2F%3E%3Ccircle%20cx%3D%22776.6%22%20cy%3D%22893.8%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.48%22%2F%3E%3Ccircle%20cx%3D%221064.4%22%20cy%3D%22312.3%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.42%22%2F%3E%3Ccircle%20cx%3D%22592.4%22%20cy%3D%22196.4%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.27%22%2F%3E%3Ccircle%20cx%3D%22477.5%22%20cy%3D%22825.1%22%20r%3D%220.7%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.23%22%2F%3E%3Ccircle%20cx%3D%22482.0%22%20cy%3D%22250.1%22%20r%3D%220.5%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.73%22%2F%3E%3Ccircle%20cx%3D%22334.1%22%20cy%3D%22373.8%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.64%22%2F%3E%3Ccircle%20cx%3D%221149.3%22%20cy%3D%22135.8%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.28%22%2F%3E%3Ccircle%20cx%3D%2214.5%22%20cy%3D%22748.0%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.36%22%2F%3E%3Ccircle%20cx%3D%22174.8%22%20cy%3D%22481.1%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.56%22%2F%3E%3Ccircle%20cx%3D%22828.6%22%20cy%3D%22463.9%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.62%22%2F%3E%3Ccircle%20cx%3D%22548.0%22%20cy%3D%22783.9%22%20r%3D%221.3%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.64%22%2F%3E%3Ccircle%20cx%3D%22470.9%22%20cy%3D%22359.1%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.5%22%2F%3E%3Ccircle%20cx%3D%2274.7%22%20cy%3D%2260.6%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.48%22%2F%3E%3Ccircle%20cx%3D%22408.1%22%20cy%3D%2247.3%22%20r%3D%220.5%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.56%22%2F%3E%3Ccircle%20cx%3D%22121.8%22%20cy%3D%22327.2%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.23%22%2F%3E%3Ccircle%20cx%3D%22736.9%22%20cy%3D%22133.7%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.82%22%2F%3E%3Ccircle%20cx%3D%22569.0%22%20cy%3D%22103.8%22%20r%3D%220.7%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.85%22%2F%3E%3Ccircle%20cx%3D%22576.5%22%20cy%3D%22280.7%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.25%22%2F%3E%3Ccircle%20cx%3D%22888.4%22%20cy%3D%22430.8%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.29%22%2F%3E%3Ccircle%20cx%3D%22246.3%22%20cy%3D%22856.8%22%20r%3D%220.6%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.28%22%2F%3E%3Ccircle%20cx%3D%221097.0%22%20cy%3D%22682.3%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.84%22%2F%3E%3Ccircle%20cx%3D%22835.4%22%20cy%3D%22235.0%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.79%22%2F%3E%3Ccircle%20cx%3D%22926.3%22%20cy%3D%22479.3%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.52%22%2F%3E%3Ccircle%20cx%3D%22735.9%22%20cy%3D%22709.6%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.75%22%2F%3E%3Ccircle%20cx%3D%22982.0%22%20cy%3D%22665.9%22%20r%3D%220.5%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.31%22%2F%3E%3Ccircle%20cx%3D%22426.7%22%20cy%3D%2226.1%22%20r%3D%220.5%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.71%22%2F%3E%3Ccircle%20cx%3D%22311.0%22%20cy%3D%22623.3%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.48%22%2F%3E%3Ccircle%20cx%3D%221146.0%22%20cy%3D%22328.2%22%20r%3D%220.5%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.25%22%2F%3E%3Ccircle%20cx%3D%22236.0%22%20cy%3D%22183.9%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.84%22%2F%3E%3Ccircle%20cx%3D%22575.4%22%20cy%3D%22587.7%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.61%22%2F%3E%3Ccircle%20cx%3D%221091.7%22%20cy%3D%22704.1%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.31%22%2F%3E%3Ccircle%20cx%3D%22520.7%22%20cy%3D%22572.3%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.72%22%2F%3E%3Ccircle%20cx%3D%22555.8%22%20cy%3D%22669.0%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.67%22%2F%3E%3Ccircle%20cx%3D%221191.7%22%20cy%3D%2224.8%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.79%22%2F%3E%3Ccircle%20cx%3D%22733.9%22%20cy%3D%22536.3%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.62%22%2F%3E%3Ccircle%20cx%3D%22187.1%22%20cy%3D%22493.5%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.19%22%2F%3E%3Ccircle%20cx%3D%22631.9%22%20cy%3D%22840.3%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.84%22%2F%3E%3Ccircle%20cx%3D%22991.4%22%20cy%3D%22189.9%22%20r%3D%220.6%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.32%22%2F%3E%3Ccircle%20cx%3D%22288.6%22%20cy%3D%22527.8%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.54%22%2F%3E%3Ccircle%20cx%3D%2273.1%22%20cy%3D%22665.9%22%20r%3D%220.7%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.62%22%2F%3E%3Ccircle%20cx%3D%22504.8%22%20cy%3D%22825.9%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.27%22%2F%3E%3Ccircle%20cx%3D%22628.2%22%20cy%3D%2216.8%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.7%22%2F%3E%3Ccircle%20cx%3D%22931.2%22%20cy%3D%22134.8%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.5%22%2F%3E%3Ccircle%20cx%3D%22667.8%22%20cy%3D%22293.4%22%20r%3D%220.8%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.54%22%2F%3E%3Ccircle%20cx%3D%22941.1%22%20cy%3D%2295.5%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.22%22%2F%3E%3Ccircle%20cx%3D%22332.3%22%20cy%3D%22695.0%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.48%22%2F%3E%3Ccircle%20cx%3D%22912.0%22%20cy%3D%22821.2%22%20r%3D%220.7%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.4%22%2F%3E%3Ccircle%20cx%3D%22727.4%22%20cy%3D%22179.5%22%20r%3D%220.6%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.48%22%2F%3E%3Ccircle%20cx%3D%22968.8%22%20cy%3D%22457.0%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.65%22%2F%3E%3Ccircle%20cx%3D%221107.3%22%20cy%3D%22803.5%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.74%22%2F%3E%3Ccircle%20cx%3D%22500.0%22%20cy%3D%22353.1%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.23%22%2F%3E%3Ccircle%20cx%3D%22514.0%22%20cy%3D%22191.4%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.71%22%2F%3E%3Ccircle%20cx%3D%221127.4%22%20cy%3D%22579.1%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.28%22%2F%3E%3Ccircle%20cx%3D%221161.1%22%20cy%3D%22197.6%22%20r%3D%220.5%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.45%22%2F%3E%3Ccircle%20cx%3D%22195.4%22%20cy%3D%22601.0%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.29%22%2F%3E%3Ccircle%20cx%3D%221192.9%22%20cy%3D%22363.4%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.31%22%2F%3E%3Ccircle%20cx%3D%22110.6%22%20cy%3D%22329.4%22%20r%3D%220.6%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.55%22%2F%3E%3Ccircle%20cx%3D%22843.8%22%20cy%3D%22345.9%22%20r%3D%220.8%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.6%22%2F%3E%3Ccircle%20cx%3D%221152.9%22%20cy%3D%22101.6%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.33%22%2F%3E%3Ccircle%20cx%3D%22100.9%22%20cy%3D%22244.7%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.3%22%2F%3E%3Ccircle%20cx%3D%22983.7%22%20cy%3D%22764.6%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.73%22%2F%3E%3Ccircle%20cx%3D%22487.1%22%20cy%3D%22482.9%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.56%22%2F%3E%3Ccircle%20cx%3D%22107.4%22%20cy%3D%2251.8%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.3%22%2F%3E%3Ccircle%20cx%3D%22322.7%22%20cy%3D%2215.1%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.72%22%2F%3E%3Ccircle%20cx%3D%22729.8%22%20cy%3D%22200.2%22%20r%3D%220.6%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.76%22%2F%3E%3Ccircle%20cx%3D%2213.9%22%20cy%3D%22894.9%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.8%22%2F%3E%3Ccircle%20cx%3D%22746.0%22%20cy%3D%2238.9%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.34%22%2F%3E%3Ccircle%20cx%3D%221163.1%22%20cy%3D%22235.7%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.32%22%2F%3E%3Ccircle%20cx%3D%22754.4%22%20cy%3D%22478.0%22%20r%3D%220.5%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.37%22%2F%3E%3Ccircle%20cx%3D%22806.6%22%20cy%3D%22243.5%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.19%22%2F%3E%3Ccircle%20cx%3D%2244.3%22%20cy%3D%2216.6%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.55%22%2F%3E%3Ccircle%20cx%3D%22617.1%22%20cy%3D%22221.1%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.25%22%2F%3E%3Ccircle%20cx%3D%22787.8%22%20cy%3D%22491.3%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.83%22%2F%3E%3Ccircle%20cx%3D%22825.3%22%20cy%3D%22884.2%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.31%22%2F%3E%3Ccircle%20cx%3D%22485.6%22%20cy%3D%22312.8%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.74%22%2F%3E%3Ccircle%20cx%3D%2284.9%22%20cy%3D%22666.8%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.47%22%2F%3E%3Ccircle%20cx%3D%22101.4%22%20cy%3D%22757.1%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.52%22%2F%3E%3Ccircle%20cx%3D%22718.5%22%20cy%3D%22623.4%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.49%22%2F%3E%3Ccircle%20cx%3D%22322.8%22%20cy%3D%223.3%22%20r%3D%220.6%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.82%22%2F%3E%3Ccircle%20cx%3D%22388.2%22%20cy%3D%2231.0%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.33%22%2F%3E%3Ccircle%20cx%3D%221.3%22%20cy%3D%22343.5%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.37%22%2F%3E%3Ccircle%20cx%3D%22297.8%22%20cy%3D%22698.6%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.36%22%2F%3E%3Ccircle%20cx%3D%22172.6%22%20cy%3D%22528.1%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.2%22%2F%3E%3Ccircle%20cx%3D%22755.6%22%20cy%3D%2276.0%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.75%22%2F%3E%3Ccircle%20cx%3D%22789.1%22%20cy%3D%22644.4%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.44%22%2F%3E%3Ccircle%20cx%3D%22864.8%22%20cy%3D%22444.8%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.67%22%2F%3E%3Ccircle%20cx%3D%2252.5%22%20cy%3D%22751.8%22%20r%3D%220.8%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.6%22%2F%3E%3Ccircle%20cx%3D%22167.2%22%20cy%3D%22471.4%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.56%22%2F%3E%3Ccircle%20cx%3D%22991.7%22%20cy%3D%22525.7%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.64%22%2F%3E%3Ccircle%20cx%3D%22102.1%22%20cy%3D%2237.7%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.42%22%2F%3E%3Ccircle%20cx%3D%22451.9%22%20cy%3D%22406.2%22%20r%3D%220.5%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.6%22%2F%3E%3Ccircle%20cx%3D%22816.8%22%20cy%3D%22440.4%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.49%22%2F%3E%3Ccircle%20cx%3D%22897.9%22%20cy%3D%22452.7%22%20r%3D%220.8%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.24%22%2F%3E%3Ccircle%20cx%3D%2279.3%22%20cy%3D%22663.1%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.72%22%2F%3E%3Ccircle%20cx%3D%22281.7%22%20cy%3D%22680.8%22%20r%3D%220.5%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.68%22%2F%3E%3Ccircle%20cx%3D%22592.7%22%20cy%3D%22344.3%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.79%22%2F%3E%3Ccircle%20cx%3D%22920.4%22%20cy%3D%22555.3%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.31%22%2F%3E%3Ccircle%20cx%3D%22398.1%22%20cy%3D%22586.4%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.38%22%2F%3E%3Ccircle%20cx%3D%2215.0%22%20cy%3D%2254.6%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.83%22%2F%3E%3Ccircle%20cx%3D%22830.6%22%20cy%3D%22608.1%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.65%22%2F%3E%3Ccircle%20cx%3D%22557.6%22%20cy%3D%22419.7%22%20r%3D%220.5%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.85%22%2F%3E%3Ccircle%20cx%3D%22239.1%22%20cy%3D%22880.3%22%20r%3D%220.7%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.19%22%2F%3E%3Ccircle%20cx%3D%2291.8%22%20cy%3D%22456.0%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.85%22%2F%3E%3Ccircle%20cx%3D%22251.8%22%20cy%3D%22851.0%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.23%22%2F%3E%3Ccircle%20cx%3D%22170.1%22%20cy%3D%22471.7%22%20r%3D%220.6%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.27%22%2F%3E%3Ccircle%20cx%3D%22335.5%22%20cy%3D%22101.4%22%20r%3D%220.6%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.34%22%2F%3E%3Ccircle%20cx%3D%22472.9%22%20cy%3D%22143.2%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.64%22%2F%3E%3Ccircle%20cx%3D%22362.3%22%20cy%3D%22126.6%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.43%22%2F%3E%3Ccircle%20cx%3D%221008.3%22%20cy%3D%221.6%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.41%22%2F%3E%3Ccircle%20cx%3D%22144.0%22%20cy%3D%22833.8%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.19%22%2F%3E%3Ccircle%20cx%3D%22303.9%22%20cy%3D%2258.5%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.85%22%2F%3E%3Ccircle%20cx%3D%22432.9%22%20cy%3D%22385.2%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.75%22%2F%3E%3Ccircle%20cx%3D%22122.1%22%20cy%3D%22751.2%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.61%22%2F%3E%3Ccircle%20cx%3D%22299.2%22%20cy%3D%22239.2%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.39%22%2F%3E%3Ccircle%20cx%3D%22942.2%22%20cy%3D%22385.0%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.72%22%2F%3E%3Ccircle%20cx%3D%221096.1%22%20cy%3D%22846.6%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.32%22%2F%3E%3Ccircle%20cx%3D%2259.4%22%20cy%3D%22659.1%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.59%22%2F%3E%3Ccircle%20cx%3D%22773.4%22%20cy%3D%22257.6%22%20r%3D%220.5%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.79%22%2F%3E%3Ccircle%20cx%3D%22152.8%22%20cy%3D%22425.0%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.37%22%2F%3E%3Ccircle%20cx%3D%22886.8%22%20cy%3D%22878.7%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.45%22%2F%3E%3Ccircle%20cx%3D%22361.0%22%20cy%3D%22501.6%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.26%22%2F%3E%3Ccircle%20cx%3D%2290.2%22%20cy%3D%22450.5%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.51%22%2F%3E%3Ccircle%20cx%3D%22543.6%22%20cy%3D%22299.6%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.48%22%2F%3E%3Ccircle%20cx%3D%22657.3%22%20cy%3D%22219.7%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.41%22%2F%3E%3Ccircle%20cx%3D%22383.1%22%20cy%3D%22331.5%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.56%22%2F%3E%3Ccircle%20cx%3D%22899.6%22%20cy%3D%22371.5%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.68%22%2F%3E%3Ccircle%20cx%3D%22452.2%22%20cy%3D%22304.4%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.51%22%2F%3E%3Ccircle%20cx%3D%22151.0%22%20cy%3D%22453.1%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.71%22%2F%3E%3Ccircle%20cx%3D%22111.1%22%20cy%3D%22807.1%22%20r%3D%220.7%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.45%22%2F%3E%3Ccircle%20cx%3D%22518.2%22%20cy%3D%22280.8%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.76%22%2F%3E%3Ccircle%20cx%3D%22152.7%22%20cy%3D%22382.7%22%20r%3D%221.3%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.78%22%2F%3E%3Ccircle%20cx%3D%221161.9%22%20cy%3D%22440.8%22%20r%3D%220.5%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.44%22%2F%3E%3Ccircle%20cx%3D%221026.6%22%20cy%3D%22875.0%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.7%22%2F%3E%3Ccircle%20cx%3D%22185.3%22%20cy%3D%22470.1%22%20r%3D%221.0%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.25%22%2F%3E%3Ccircle%20cx%3D%22102.0%22%20cy%3D%22699.2%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.7%22%2F%3E%3Ccircle%20cx%3D%22683.3%22%20cy%3D%2233.8%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.38%22%2F%3E%3Ccircle%20cx%3D%22751.8%22%20cy%3D%22475.4%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.65%22%2F%3E%3Ccircle%20cx%3D%22119.3%22%20cy%3D%22270.3%22%20r%3D%220.8%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.31%22%2F%3E%3Ccircle%20cx%3D%22268.3%22%20cy%3D%22541.0%22%20r%3D%220.5%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.54%22%2F%3E%3Ccircle%20cx%3D%22334.3%22%20cy%3D%22284.7%22%20r%3D%221.3%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.77%22%2F%3E%3Ccircle%20cx%3D%22631.5%22%20cy%3D%22492.3%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.82%22%2F%3E%3Ccircle%20cx%3D%2266.4%22%20cy%3D%22174.7%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.61%22%2F%3E%3Ccircle%20cx%3D%22308.7%22%20cy%3D%22600.6%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.33%22%2F%3E%3Ccircle%20cx%3D%22835.0%22%20cy%3D%22646.5%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.64%22%2F%3E%3Ccircle%20cx%3D%228.1%22%20cy%3D%22262.9%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.52%22%2F%3E%3Ccircle%20cx%3D%22594.8%22%20cy%3D%22180.4%22%20r%3D%221.3%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.73%22%2F%3E%3Ccircle%20cx%3D%22558.1%22%20cy%3D%22238.5%22%20r%3D%220.6%22%20fill%3D%22%23bcd2ff%22%20opacity%3D%220.25%22%2F%3E%3Ccircle%20cx%3D%22732.1%22%20cy%3D%22806.8%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.46%22%2F%3E%3Ccircle%20cx%3D%221138.5%22%20cy%3D%22131.7%22%20r%3D%220.7%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.22%22%2F%3E%3Ccircle%20cx%3D%221168.9%22%20cy%3D%22127.7%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.66%22%2F%3E%3Ccircle%20cx%3D%22472.0%22%20cy%3D%22808.4%22%20r%3D%220.6%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.67%22%2F%3E%3Ccircle%20cx%3D%221117.9%22%20cy%3D%22296.3%22%20r%3D%220.5%22%20fill%3D%22%23ffe6c9%22%20opacity%3D%220.62%22%2F%3E%3Ccircle%20cx%3D%22895.6%22%20cy%3D%2228.7%22%20r%3D%221.0%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.67%22%2F%3E%3Ccircle%20cx%3D%221182.0%22%20cy%3D%22398.2%22%20r%3D%220.5%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.18%22%2F%3E%3C%2Fsvg%3E"),
+    radial-gradient(60% 45% at 18% 12%, rgba(74, 62, 168, 0.34), transparent 70%),
+    radial-gradient(55% 40% at 88% 30%, rgba(22, 88, 126, 0.28), transparent 72%),
+    radial-gradient(70% 50% at 62% 104%, rgba(128, 34, 96, 0.20), transparent 70%);
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 1200px 900px, cover, cover, cover;
+  background-attachment: fixed;
 }
 
 .visually-hidden {
@@ -46,6 +58,7 @@ body {
 .brand-mark {
   width: 12px; height: 12px; background: var(--red);
   display: inline-block; align-self: center;
+  box-shadow: 0 0 14px rgba(255, 59, 98, 0.55);
 }
 
 .brand-name { font-weight: 700; letter-spacing: 0.12em; font-size: 15px; }
@@ -104,7 +117,7 @@ body {
 .lesson-select {
   width: 100%; padding: 8px 10px;
   font: inherit; color: var(--ink);
-  background: var(--bg); border: 1px solid var(--line-strong);
+  background: var(--bg-solid); border: 1px solid var(--line-strong);
   border-radius: 0;
 }
 
@@ -122,7 +135,7 @@ body {
   background: var(--line); border: 1px solid var(--line);
 }
 
-.stats-grid > div { background: var(--bg); padding: 8px 10px; }
+.stats-grid > div { background: var(--bg-solid); padding: 8px 10px; }
 .stats-grid dt { font-size: 11px; color: var(--ink-soft); letter-spacing: 0.05em; }
 .stats-grid dd { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
@@ -165,6 +178,8 @@ body {
   aspect-ratio: 16 / 9;
   background: var(--screen);
   border: 1px solid var(--line);
+  /* 一圈极淡的冷光，让画面像悬在深空里而不是贴在纸上 */
+  box-shadow: 0 0 70px var(--glow);
 }
 
 /* 遮挡视频内嵌硬字幕的黑条（防止答案直接印在画面上） */
@@ -181,7 +196,7 @@ body {
   position: absolute; inset: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 10px; text-align: center; padding: 24px;
-  background: var(--bg-alt);
+  background: #070912;
 }
 
 .local-overlay-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -194,23 +209,23 @@ body {
 .btn {
   font: inherit; font-size: 13px; letter-spacing: 0.04em;
   padding: 8px 16px;
-  background: var(--bg); color: var(--ink);
+  background: var(--bg-solid); color: var(--ink);
   border: 1px solid var(--line-strong); border-radius: 0;
   cursor: pointer;
 }
 
-.btn:hover:not(:disabled) { background: var(--ink); color: var(--bg); }
+.btn:hover:not(:disabled) { background: var(--ink); color: var(--bg-solid); }
 
-.btn:disabled { color: #5a5a64; border-color: #2e2e36; cursor: not-allowed; background: var(--bg); }
+.btn:disabled { color: #5b6178; border-color: rgba(150,165,220,0.14); cursor: not-allowed; background: var(--bg-solid); }
 
-.btn-primary { background: var(--red); border-color: var(--red); color: #17171b; }
-.btn-primary:hover:not(:disabled) { background: #ff5570; border-color: #ff5570; color: #17171b; }
+.btn-primary { background: var(--red); border-color: var(--red); color: #0b0c18; }
+.btn-primary:hover:not(:disabled) { background: #ff5c7d; border-color: #ff5c7d; color: #0b0c18; }
 
 .btn-ghost { border-color: var(--line); }
 
 /* 听本句：黑实底，视觉上是练习的起点动作 */
-.btn-dark { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-.btn-dark:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; color: var(--bg); }
+.btn-dark { background: var(--ink); border-color: var(--ink); color: var(--bg-solid); }
+.btn-dark:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; color: var(--bg-solid); }
 
 .file-btn { display: inline-flex; align-items: center; }
 
@@ -248,7 +263,7 @@ body {
   margin: 12px 0 4px;
   padding: 10px 12px 7px;
   border: 1px solid var(--line);
-  background: var(--bg);
+  background: rgba(4, 6, 16, 0.55);
   cursor: text;
 }
 
@@ -272,7 +287,7 @@ body {
 
 .track-placeholder {
   position: absolute; right: 14px; bottom: 8px;
-  font-size: 12px; color: #6e6e78;
+  font-size: 12px; color: #6b7290;
   pointer-events: none;
 }
 
@@ -291,13 +306,13 @@ body {
   width: 18px; height: 25px;
   display: inline-flex; align-items: flex-start; justify-content: center;
   font-size: 16px; font-weight: 500;
-  border-bottom: 2px solid #3c3c45;
+  border-bottom: 2px solid rgba(150, 165, 220, 0.28);
   color: transparent;
 }
 
 .track-cell.correct { color: var(--ink); border-bottom-color: var(--ink); }
 .track-cell.wrong { color: var(--red); border-bottom-color: var(--red); }
-.track-cell.punct { color: #6e6e78; border-bottom-color: transparent; width: 9px; }
+.track-cell.punct { color: #6b7290; border-bottom-color: transparent; width: 9px; }
 
 /* 超出原句的多余字母：整组标红，和正文格子拉开距离 */
 .track-extra { margin-left: 6px; border-left: 2px solid var(--red); padding-left: 8px; }

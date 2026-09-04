@@ -90,7 +90,7 @@ tools/transcribe.sh 1/S01E01.mp4
 | 文件 | 作用 |
 |---|---|
 | `index.html` | 页面结构（桌面三栏布局：语境 / 画面+听写 / 语言解析） |
-| `styles.css` | Swiss editorial 风格样式（暗色） |
+| `styles.css` | 深空风格样式（星空底 + Swiss 网格） |
 | `app.js` | 页面逻辑（听写判定、声音、录音、统计、字幕导入） |
 | `explain.js` | 语言解析面板（Claude 直连 / 复制提问、本地缓存） |
 | `content.js` | 内置课程数据（可公开） |
