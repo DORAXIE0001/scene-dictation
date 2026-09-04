@@ -55,7 +55,7 @@ body {
 
 .layout {
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr) 340px;
+  grid-template-columns: 300px minmax(0, 1fr) 400px;
   min-height: calc(100vh - 53px);
   /* 超宽屏上整版居中收拢，避免右侧大片空白 */
   max-width: 1780px;
@@ -67,8 +67,8 @@ body {
 }
 
 /* 放不下三列时，解析栏落到画面与听写区下方，不挤压视频 */
-@media (max-width: 1359px) {
-  .layout { grid-template-columns: 360px minmax(0, 1fr); }
+@media (max-width: 1199px) {
+  .layout { grid-template-columns: 300px minmax(0, 1fr); }
   .col-explain {
     grid-column: 2;
     border-left: none;
@@ -82,13 +82,13 @@ body {
 }
 
 .col-right {
-  padding: 28px 32px 40px;
+  padding: 24px 26px 36px;
   background: var(--bg-alt);
 }
 
 /* ---------- 左列面板 ---------- */
 
-.panel { padding: 20px 24px; border-bottom: 1px solid var(--line); }
+.panel { padding: 18px 20px; border-bottom: 1px solid var(--line); }
 
 .panel-label {
   font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
@@ -151,9 +151,9 @@ body {
 
 /* ---------- 画面区 ---------- */
 
-/* 右列内容统一限宽：宽屏上视频不再铺满，且按视口高度收缩，保证画面+听写区同屏可见 */
-.media-frame, .media-bar, .dictation {
-  max-width: min(880px, calc((100vh - 320px) * 1.7778));
+/* 画面单独限宽（比听写区更窄），并按视口高度收缩，保证画面+听写区同屏可见 */
+.media-frame {
+  max-width: min(600px, calc((100vh - 360px) * 1.7778));
 }
 
 .media-frame {
@@ -214,8 +214,8 @@ body {
 /* ---------- 素材工具条 ---------- */
 
 .media-bar {
-  display: flex; align-items: center; gap: 14px;
-  margin-top: 12px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 10px; padding: 8px 12px;
   background: var(--bg); border: 1px solid var(--line);
 }
 
@@ -224,17 +224,17 @@ body {
 /* ---------- 听写区 ---------- */
 
 .dictation {
-  margin-top: 20px;
+  margin-top: 16px;
   background: var(--bg);
   border: 1px solid var(--line-strong);
-  padding: 22px 26px 26px;
+  padding: 18px 22px 20px;
 }
 
 .line-head { display: flex; justify-content: space-between; align-items: baseline; }
 .line-speaker { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); }
 .line-progress { font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 
-.line-zh { font-size: 20px; font-weight: 700; margin-top: 6px; }
+.line-zh { font-size: 19px; font-weight: 700; margin-top: 4px; }
 
 /* 字幕没有中文时的题面：降级为弱提示，不再用大标题喊话 */
 .line-zh.placeholder { font-size: 14px; font-weight: 400; color: var(--ink-soft); }
@@ -242,8 +242,8 @@ body {
 /* 输入区外壳：真实 input 透明覆盖其上，视觉全部由逐字轨道承担 */
 .track-shell {
   position: relative;
-  margin: 16px 0 4px;
-  padding: 14px 16px 10px;
+  margin: 12px 0 4px;
+  padding: 10px 12px 7px;
   border: 1px solid var(--line);
   background: var(--bg);
   cursor: text;
@@ -277,24 +277,24 @@ body {
 
 /* 逐字轨道：每个单词一组，每个字符一个下划线格 */
 .letter-track {
-  display: flex; flex-wrap: wrap; gap: 10px 18px;
-  min-height: 34px;
+  display: flex; flex-wrap: wrap; gap: 6px 13px;
+  min-height: 27px;
 }
 
-.track-word { display: flex; gap: 3px; }
+.track-word { display: flex; gap: 2px; }
 
 .track-cell {
   position: relative;
-  width: 22px; height: 30px;
+  width: 18px; height: 25px;
   display: inline-flex; align-items: flex-start; justify-content: center;
-  font-size: 18px; font-weight: 500;
+  font-size: 16px; font-weight: 500;
   border-bottom: 2px solid #3c3c45;
   color: transparent;
 }
 
 .track-cell.correct { color: var(--ink); border-bottom-color: var(--ink); }
 .track-cell.wrong { color: var(--red); border-bottom-color: var(--red); }
-.track-cell.punct { color: #6e6e78; border-bottom-color: transparent; width: 12px; }
+.track-cell.punct { color: #6e6e78; border-bottom-color: transparent; width: 9px; }
 
 /* 超出原句的多余字母：整组标红，和正文格子拉开距离 */
 .track-extra { margin-left: 6px; border-left: 2px solid var(--red); padding-left: 8px; }
@@ -303,7 +303,7 @@ body {
 .track-cell.caret::after,
 .track-cell.caret-end::after {
   content: '';
-  position: absolute; top: 2px; bottom: 5px;
+  position: absolute; top: 1px; bottom: 4px;
   width: 2px; background: var(--red);
   animation: caret-blink 1.1s step-end infinite;
 }
@@ -331,7 +331,7 @@ body {
   .track-cell.caret::after { animation: none; }
 }
 
-.feedback { margin-top: 10px; font-size: 14px; min-height: 22px; color: var(--ink-soft); }
+.feedback { margin-top: 8px; font-size: 13px; min-height: 20px; color: var(--ink-soft); }
 .feedback.ok { color: var(--ink); }
 .feedback.err { color: var(--red); }
 
@@ -344,7 +344,7 @@ body {
 .answer-reveal-label { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; color: var(--ink-soft); text-transform: uppercase; }
 .answer-text { font-size: 18px; font-weight: 700; margin-top: 2px; }
 
-.controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 
 .hint-text { margin-top: 10px; font-size: 14px; color: var(--ink-soft); border-top: 1px dashed var(--line); padding-top: 8px; }
 
@@ -361,7 +361,7 @@ body {
 
 .line-nav {
   display: flex; justify-content: space-between; align-items: center;
-  margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line);
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line);
 }
 
 .line-dots { display: flex; gap: 8px; }
